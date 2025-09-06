@@ -1,0 +1,45 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Detalle de {{ negotiator.name }}</h1>
+        <a href="{% url 'lider_dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
+    </div>
+    <hr>
+
+    <h3>Última Evaluación</h3>
+    {% if last_evaluation %}
+        <div class="card">
+            <div class="card-header">
+                Evaluación del {{ last_evaluation.date|date:"d/m/Y" }}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Calificación General: {{ last_evaluation.overall_score|floatformat:2 }}</h5>
+                <p class="card-text"><strong>Retroalimentación:</strong> {{ last_evaluation.feedback|default:"No se proporcionó retroalimentación." }}</p>
+                
+                <h6>KPIs Evaluados:</h6>
+                <ul class="list-group">
+                    {% for kpi_eval in last_evaluation.kpis.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ kpi_eval.kpi.name }}
+                            <span class="badge bg-primary rounded-pill">{{ kpi_eval.score|floatformat:2 }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">No se evaluaron KPIs específicos en esta ocasión.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Este negociador aún no tiene evaluaciones registradas.
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="#" class="btn btn-primary">Iniciar Nueva Evaluación</a>
+    </div>
+</div>
+{% endblock %}

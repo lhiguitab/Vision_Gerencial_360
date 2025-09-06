@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 fw-bold">Dashboard del Líder</h1>
+            <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+        </div>
+        <p class="fs-4">Bienvenido, {{ user.first_name }} {{ user.last_name }}.</p>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Mis Negociadores Asignados</h2>
+    {% if negotiators %}
+        <div class="list-group">
+            {% for negotiator in negotiators %}
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ negotiator.name }}</h5>
+                        <small>ID: {{ negotiator.cedula }}</small>
+                    </div>
+                    <p class="mb-1">Estado de evaluaciones: {{ negotiator.get_evaluation_status }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Actualmente no tienes negociadores asignados.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
