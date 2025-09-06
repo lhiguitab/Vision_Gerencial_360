@@ -6,6 +6,8 @@ from allauth.account.forms import SignupForm
 
 class CustomSignupForm(SignupForm):
     cedula = forms.CharField(max_length=12, label='Cédula', widget=forms.TextInput(attrs={'placeholder': 'Cédula'}))
+    first_name = forms.CharField(max_length=255, label='Nombre', required=False)
+    last_name = forms.CharField(max_length=255, label='Apellido', required=False)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -23,13 +25,10 @@ class CustomSignupForm(SignupForm):
 
         return cleaned_data
 
-    def save(self, request):
-        user = super(CustomSignupForm, self).save(request)
-        return user
-
     def signup(self, request, user):
         user.cedula = self.cleaned_data['cedula']
-        user.save()
+        user.first_name = self.cleaned_data.get('first_name', '')
+        user.last_name = self.cleaned_data.get('last_name', '')
         return user
 
 class CustomUserCreationForm(UserCreationForm):

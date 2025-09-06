@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5 text-center">
+        <h1 class="display-5 fw-bold">Bienvenido a Vision Gerencial 360</h1>
+        <p class="col-md-8 fs-4 mx-auto">Tu plataforma para la gestión integral de negociadores.</p>
+        <hr class="my-4">
+        <p>Inicia sesión para acceder a tu dashboard personalizado.</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'account_login' %}" role="button">Iniciar Sesión</a>
+        <a class="btn btn-outline-secondary btn-lg" href="{% url 'account_signup' %}" role="button">Registrarse</a>
+    </div>
+</div>
+{% endblock %}
