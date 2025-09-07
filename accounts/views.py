@@ -173,31 +173,25 @@ def negotiator_indicators_api(request, cedula):
         date__lte=end_date
     ).order_by('date')
     
-    # Preparar datos para los gráficos
+    # Preparar datos para los gráficos con los nuevos KPIs
     data = {
         'labels': [],
-        'conversion_rate': [],
-        'total_revenue': [],
-        'absenteeism_rate': [],
-        'call_duration': [],
-        'calls_made': [],
-        'deals_closed': [],
-        'deals_failed': [],
-        'success_rate': [],
-        'revenue_per_call': []
+        'conversion_de_ventas': [],
+        'recaudacion_mensual': [],
+        'tiempo_hablando': [],
+        'porcentajes_cumplimiento_recaudo': [],
+        'porcentaje_cumplimiento_conversion': [],
+        'porcentaje_caidas_acuerdos': []
     }
-    
+
     for indicator in indicators:
         data['labels'].append(indicator.date.strftime('%Y-%m-%d'))
-        data['conversion_rate'].append(indicator.conversion_rate)
-        data['total_revenue'].append(indicator.total_revenue)
-        data['absenteeism_rate'].append(indicator.absenteeism_rate)
-        data['call_duration'].append(indicator.call_duration)
-        data['calls_made'].append(indicator.calls_made)
-        data['deals_closed'].append(indicator.deals_closed)
-        data['deals_failed'].append(indicator.deals_failed)
-        data['success_rate'].append(indicator.success_rate)
-        data['revenue_per_call'].append(indicator.revenue_per_call)
+        data['conversion_de_ventas'].append(indicator.conversion_de_ventas)
+        data['recaudacion_mensual'].append(indicator.recaudacion_mensual)
+        data['tiempo_hablando'].append(indicator.tiempo_hablando)
+        data['porcentajes_cumplimiento_recaudo'].append(indicator.porcentajes_cumplimiento_recaudo)
+        data['porcentaje_cumplimiento_conversion'].append(indicator.porcentaje_cumplimiento_conversion)
+        data['porcentaje_caidas_acuerdos'].append(indicator.porcentaje_caidas_acuerdos)
     
     return JsonResponse(data)
 

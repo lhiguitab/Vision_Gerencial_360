@@ -205,21 +205,21 @@ class EvaluationKPI(models.Model):
 
 class NegotiatorIndicator(models.Model):
     """
-    Modelo para almacenar indicadores históricos del negociador
-    (Datos que vendrían de Databricks en tiempo real)
+    Historical indicators for a negotiator (real-time in production from Databricks).
+    Field names aligned with the KPI names used by create_fake_indicators.py.
     """
-    negotiator = models.ForeignKey(Negotiator, on_delete=models.CASCADE, related_name='indicators')
+    negotiator = models.ForeignKey('Negotiator', on_delete=models.CASCADE, related_name='indicators')
     date = models.DateField()
-    
-    # Indicadores clave
-    conversion_rate = models.FloatField(default=0.0, help_text='Tasa de conversión (%)')
-    total_revenue = models.FloatField(default=0.0, help_text='Recaudación total ($)')
-    absenteeism_rate = models.FloatField(default=0.0, help_text='Tasa de ausentismo (%)')
-    call_duration = models.FloatField(default=0.0, help_text='Duración promedio de llamadas (minutos)')
-    calls_made = models.IntegerField(default=0, help_text='Número de llamadas realizadas')
-    deals_closed = models.IntegerField(default=0, help_text='Acuerdos cerrados')
-    deals_failed = models.IntegerField(default=0, help_text='Acuerdos fallidos')
-    
+
+    # === Required KPIs ===
+    conversion_de_ventas = models.FloatField(default=0.0, help_text='Conversión de ventas (%)')
+    recaudacion_mensual = models.FloatField(default=0.0, help_text='Recaudación mensual ($)')
+    tiempo_hablando = models.FloatField(default=0.0, help_text='Tiempo hablando (horas)')
+    porcentajes_cumplimiento_recaudo = models.FloatField(default=0.0, help_text='Porcentaje de cumplimiento de recaudo (%)')
+    porcentaje_cumplimiento_conversion = models.FloatField(default=0.0, help_text='Porcentaje de cumplimiento de conversión (%)')
+    porcentaje_caidas_acuerdos = models.FloatField(default=0.0, help_text='Porcentaje de caídas de acuerdos (%)')
+
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -230,17 +230,18 @@ class NegotiatorIndicator(models.Model):
     def __str__(self):
         return f'{self.negotiator.name} - {self.date}'
 
+    # Optional helper properties (keep if useful; they use the above KPIs)
     @property
     def success_rate(self):
-        """Calcula la tasa de éxito basada en acuerdos cerrados vs fallidos"""
-        total_deals = self.deals_closed + self.deals_failed
-        if total_deals == 0:
-            return 0.0
-        return (self.deals_closed / total_deals) * 100
+        """
+        If you later track deals_closed/deals_failed again, you can restore this.
+        Currently not computable with the given KPIs alone.
+        """
+        return None
 
     @property
-    def revenue_per_call(self):
-        """Calcula la recaudación promedio por llamada"""
-        if self.calls_made == 0:
+    def revenue_per_hour(self):
+        """Average revenue per hour talking; safe if tiempo_hablando is zero."""
+        if self.tiempo_hablando == 0:
             return 0.0
-        return self.total_revenue / self.calls_made
+        return self.recaudacion_mensual / self.tiempo_hablando
