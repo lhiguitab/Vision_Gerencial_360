@@ -34,7 +34,7 @@ class CustomSignupForm(SignupForm):
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ('cedula', 'email', 'first_name', 'last_name', 'role')
+        fields = ('cedula', 'email', 'first_name', 'last_name', 'role', 'password', 'password2')
 
     def clean_cedula(self):
         cedula = self.cleaned_data.get('cedula')

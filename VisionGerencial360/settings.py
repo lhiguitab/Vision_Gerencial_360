@@ -160,7 +160,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'cedula'
-ACCOUNT_LOGIN_METHODS = ['username']
+ACCOUNT_LOGIN_METHODS = ['username', 'email']
 ACCOUNT_SIGNUP_FIELDS = ['cedula', 'email', 'password1']
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_ADAPTER = 'accounts.adapter.CustomAccountAdapter'
