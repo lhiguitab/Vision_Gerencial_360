@@ -26,13 +26,13 @@
                         <p class="card-text">Negociadores requieren evaluación</p>
                         <a href="{% url 'pending_evaluations' %}" class="btn btn-warning">
                             Ver Detalles
-                        </a>
+            {% else %}
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">¡Felicidades!</h5>
+                        <p class="card-text fw-bold">Todos los negociadores están al día. No hay evaluaciones pendientes.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card bg-success text-white">
                     <div class="card-body">
@@ -57,6 +57,12 @@
                         <small>ID: {{ negotiator.cedula }}</small>
                     </div>
                     <p class="mb-1">Estado de evaluaciones: {{ negotiator.get_evaluation_status }}</p>
+                    <!-- Mostrar número de evaluaciones pendientes si aplica -->
+                    {% for item in pending_negotiators %}
+                        {% if item.negotiator.id == negotiator.id %}
+                            <p class="mb-1 text-danger fw-bold">Evaluaciones pendientes: {{ item.pending_count }}</p>
+                        {% endif %}
+                    {% endfor %}
                 </a>
             {% endfor %}
         </div>

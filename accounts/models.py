@@ -70,25 +70,30 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_negotiators_with_pending_evaluations(self):
         """
-        Retorna los negociadores de este líder que tienen evaluaciones pendientes
+        Retorna los negociadores de este líder que tienen evaluaciones pendientes y cuántas pendientes tienen
         """
         negotiators = self.negotiators.all()
         pending_negotiators = []
-        
         for negotiator in negotiators:
-            if negotiator.get_evaluation_status == "Pendiente":
-                last_evaluation = negotiator.evaluations.order_by('-date').first()
-                days_since_last = None
-                
-                if last_evaluation:
-                    days_since_last = (timezone.now() - last_evaluation.date).days
-                
+            # Definir la lógica de "pendiente": si nunca ha sido evaluado o si la última evaluación fue hace más de 6 meses
+            last_evaluation = negotiator.evaluations.order_by('-date').first()
+            days_since_last = None
+            pending_count = 0
+            if not last_evaluation:
+                # Nunca ha sido evaluado, cuenta como 1 pendiente
+                pending_count = 1
+            else:
+                days_since_last = (timezone.now() - last_evaluation.date).days
+                # Si han pasado más de 180 días desde la última evaluación, cuenta como 1 pendiente
+                if days_since_last > 180:
+                    pending_count = 1
+            if pending_count > 0:
                 pending_negotiators.append({
                     'negotiator': negotiator,
                     'last_evaluation_date': last_evaluation.date if last_evaluation else None,
-                    'days_since_last': days_since_last
+                    'days_since_last': days_since_last,
+                    'pending_count': pending_count
                 })
-        
         return pending_negotiators
 
 class AllowedCedula(models.Model):

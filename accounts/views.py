@@ -209,9 +209,14 @@ def administrativo_dashboard_view(request):
 def negotiator_detail_view(request, cedula):
     negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
     last_evaluation = Evaluation.objects.filter(negotiator=negotiator).order_by('-date').first()
-    
+    # Evaluación en progreso: menos de 7 días desde la última
+    recent_evaluation = negotiator.evaluations.filter(
+        date__gte=timezone.now() - timezone.timedelta(days=7)
+    ).first()
     context = {
         'negotiator': negotiator,
-        'last_evaluation': last_evaluation
+        'last_evaluation': last_evaluation,
+        'has_recent_evaluation': recent_evaluation is not None,
+        'recent_evaluation': recent_evaluation
     }
     return render(request, 'accounts/negotiator_detail.html', context)

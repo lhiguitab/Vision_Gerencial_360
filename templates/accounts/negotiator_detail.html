@@ -95,9 +95,15 @@
     {% endif %}
 
     <div class="mt-4">
-        <a href="{% url 'start_evaluation' cedula=negotiator.cedula %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Iniciar Nueva Evaluación
-        </a>
+        {% if not has_recent_evaluation %}
+            <a href="{% url 'start_evaluation' cedula=negotiator.cedula %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Iniciar Nueva Evaluación
+            </a>
+        {% else %}
+            <div class="alert alert-warning mt-2">
+                Ya existe una evaluación en progreso o reciente para este negociador ({{ recent_evaluation.date|date:"d/m/Y" }}). No se puede crear una nueva evaluación hasta que pasen 7 días.
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
