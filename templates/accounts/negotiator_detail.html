@@ -1,5 +1,6 @@
 
 {% extends 'base.html' %}
+{% load kpi_tags %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,37 +10,94 @@
     </div>
     <hr>
 
-    <h3>Última Evaluación</h3>
+    <!-- Mensajes del sistema -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'warning' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h3>Última Evaluación</h3>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if negotiator.has_evaluations %}
+                <a href="{% url 'last_evaluation' cedula=negotiator.cedula %}" class="btn btn-info me-2">
+                    <i class="bi bi-eye"></i> Ver Detalles Completos
+                </a>
+            {% endif %}
+            <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success">
+                <i class="bi bi-graph-up"></i> Indicadores Históricos
+            </a>
+        </div>
+    </div>
+
     {% if last_evaluation %}
         <div class="card">
-            <div class="card-header">
-                Evaluación del {{ last_evaluation.date|date:"d/m/Y" }}
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Evaluación del {{ last_evaluation.date|date:"d/m/Y" }}</span>
+                <span class="badge {% if negotiator.get_evaluation_status == 'Al día' %}bg-success{% else %}bg-warning{% endif %}">
+                    {{ negotiator.get_evaluation_status }}
+                </span>
             </div>
             <div class="card-body">
-                <h5 class="card-title">Calificación General: {{ last_evaluation.overall_score|floatformat:2 }}</h5>
-                <p class="card-text"><strong>Retroalimentación:</strong> {{ last_evaluation.feedback|default:"No se proporcionó retroalimentación." }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-title">Calificación General: 
+                            <span class="badge bg-success fs-6">{{ last_evaluation.overall_score|floatformat:1 }}/10</span>
+                        </h5>
+                        <p class="card-text"><strong>Evaluador:</strong> {{ last_evaluation.evaluator.first_name }} {{ last_evaluation.evaluator.last_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="card-text"><strong>Hace:</strong> {{ last_evaluation.date|timesince }}</p>
+                        <p class="card-text"><strong>Total de evaluaciones:</strong> {{ negotiator.get_evaluation_count }}</p>
+                    </div>
+                </div>
+                
+                {% if last_evaluation.feedback %}
+                    <div class="mt-3">
+                        <h6>Retroalimentación:</h6>
+                        <div class="alert alert-light">
+                            {{ last_evaluation.feedback }}
+                        </div>
+                    </div>
+                {% endif %}
                 
                 <h6>KPIs Evaluados:</h6>
-                <ul class="list-group">
+                <div class="row">
                     {% for kpi_eval in last_evaluation.kpis.all %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ kpi_eval.kpi.name }}
-                            <span class="badge bg-primary rounded-pill">{{ kpi_eval.score|floatformat:2 }}</span>
-                        </li>
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <span>{{ kpi_eval.kpi.name }}</span>
+                                <span class="badge bg-primary">{{ kpi_eval.kpi|kpi_display:kpi_eval.score }}</span>
+                            </div>
+                        </div>
                     {% empty %}
-                        <li class="list-group-item">No se evaluaron KPIs específicos en esta ocasión.</li>
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                No se evaluaron KPIs específicos en esta ocasión.
+                            </div>
+                        </div>
                     {% endfor %}
-                </ul>
+                </div>
             </div>
         </div>
     {% else %}
         <div class="alert alert-info" role="alert">
-            Este negociador aún no tiene evaluaciones registradas.
+            <h5 class="alert-heading">Primera Evaluación</h5>
+            <p>Este negociador aún no tiene evaluaciones registradas. Esta será su primera evaluación.</p>
         </div>
     {% endif %}
 
     <div class="mt-4">
-        <a href="#" class="btn btn-primary">Iniciar Nueva Evaluación</a>
+        <a href="{% url 'start_evaluation' cedula=negotiator.cedula %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Iniciar Nueva Evaluación
+        </a>
     </div>
 </div>
 {% endblock %}

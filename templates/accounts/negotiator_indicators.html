@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load kpi_tags %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 fw-bold">Indicadores Históricos</h1>
+            <div>
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary me-2">Volver al Negociador</a>
+                <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-secondary me-2">Dashboard</a>
+                <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+            </div>
+        </div>
+        <p class="fs-4">Análisis de desempeño para {{ negotiator.name }} ({{ negotiator.cedula }})</p>
+    </div>
+</div>
+
+<div class="container">
+    {% if has_indicators %}
+        <!-- Indicadores actuales -->
+        {% if latest_indicator %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up"></i>
+                                Indicadores Actuales ({{ latest_indicator.date|date:"d/m/Y" }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Conversión</h6>
+                                            <h4>{{ latest_indicator.conversion_rate }}%</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Recaudación</h6>
+                                            <h4>${{ latest_indicator.total_revenue|floatformat:0 }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-warning text-dark">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Ausentismo</h6>
+                                            <h4>{{ latest_indicator.absenteeism_rate }}%</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-secondary text-white">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Llamadas</h6>
+                                            <h4>{{ latest_indicator.calls_made }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Gráficos de tendencias -->
+        <div class="row">
+            <!-- Gráfico de Conversión -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tendencia de Conversión (%)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="conversionChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Recaudación -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tendencia de Recaudación ($)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Ausentismo -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tendencia de Ausentismo (%)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="absenteeismChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Llamadas -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Tendencia de Llamadas Realizadas</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="callsChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Acuerdos -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Acuerdos Cerrados vs Fallidos</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dealsChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Duración de Llamadas -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Duración Promedio de Llamadas (min)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="durationChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No hay indicadores -->
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="bi bi-info-circle"></i>
+                        Sin Datos de Indicadores
+                    </h4>
+                    <p>Este negociador no tiene datos de indicadores históricos disponibles.</p>
+                    <p>Los datos se actualizan automáticamente desde Databricks en tiempo real.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-primary">
+                            Volver al Negociador
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Cargar datos desde la API
+fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
+    .then(response => response.json())
+    .then(data => {
+        // Configuración común para todos los gráficos
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Fecha'
+                    }
+                },
+                y: {
+                    display: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        };
+
+        // Gráfico de Conversión
+        new Chart(document.getElementById('conversionChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Tasa de Conversión (%)',
+                    data: data.conversion_rate,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Porcentaje (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Recaudación
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Recaudación Total ($)',
+                    data: data.total_revenue,
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Pesos ($)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Ausentismo
+        new Chart(document.getElementById('absenteeismChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Tasa de Ausentismo (%)',
+                    data: data.absenteeism_rate,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Porcentaje (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Llamadas
+        new Chart(document.getElementById('callsChart'), {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Llamadas Realizadas',
+                    data: data.calls_made,
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgb(153, 102, 255)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Número de Llamadas'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Acuerdos
+        new Chart(document.getElementById('dealsChart'), {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Acuerdos Cerrados',
+                    data: data.deals_closed,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 1
+                }, {
+                    label: 'Acuerdos Fallidos',
+                    data: data.deals_failed,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Número de Acuerdos'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Duración
+        new Chart(document.getElementById('durationChart'), {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Duración Promedio (min)',
+                    data: data.call_duration,
+                    borderColor: 'rgb(255, 205, 86)',
+                    backgroundColor: 'rgba(255, 205, 86, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: {
+                        ...commonOptions.scales.y,
+                        title: {
+                            display: true,
+                            text: 'Minutos'
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar los datos:', error);
+    });
+</script>
+{% endblock %}

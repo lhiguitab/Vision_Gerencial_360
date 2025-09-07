@@ -125,12 +125,57 @@ class Negotiator(models.Model):
         
         return "Al día"
 
+    def get_last_evaluation(self):
+        """
+        Retorna la última evaluación del negociador
+        """
+        return self.evaluations.order_by('-date').first()
+
+    def has_evaluations(self):
+        """
+        Retorna True si el negociador tiene al menos una evaluación
+        """
+        return self.evaluations.exists()
+
+    def get_evaluation_count(self):
+        """
+        Retorna el número total de evaluaciones del negociador
+        """
+        return self.evaluations.count()
+
 class KPI(models.Model):
+    KPI_TYPE_CHOICES = [
+        ('score', 'Puntuación (0-10)'),
+        ('percentage', 'Porcentaje (0-100%)'),
+        ('amount', 'Monto (pesos)'),
+        ('hours', 'Horas'),
+        ('count', 'Cantidad'),
+    ]
+    
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    kpi_type = models.CharField(max_length=20, choices=KPI_TYPE_CHOICES, default='score')
+    min_value = models.FloatField(default=0.0, help_text='Valor mínimo permitido')
+    max_value = models.FloatField(default=10.0, help_text='Valor máximo permitido')
+    unit = models.CharField(max_length=20, blank=True, help_text='Unidad de medida (ej: %, $, horas)')
 
     def __str__(self):
         return self.name
+
+    def get_display_value(self, value):
+        """
+        Retorna el valor formateado según el tipo de KPI
+        """
+        if self.kpi_type == 'percentage':
+            return f"{value:.1f}%"
+        elif self.kpi_type == 'amount':
+            return f"${value:,.0f}"
+        elif self.kpi_type == 'hours':
+            return f"{value:.1f} horas"
+        elif self.kpi_type == 'count':
+            return f"{value:.0f}"
+        else:  # score
+            return f"{value:.1f}/10"
 
 class Evaluation(models.Model):
     negotiator = models.ForeignKey(Negotiator, on_delete=models.CASCADE, related_name='evaluations')
@@ -152,3 +197,45 @@ class EvaluationKPI(models.Model):
 
     def __str__(self):
         return f'{self.kpi.name} - {self.score}'
+
+class NegotiatorIndicator(models.Model):
+    """
+    Modelo para almacenar indicadores históricos del negociador
+    (Datos que vendrían de Databricks en tiempo real)
+    """
+    negotiator = models.ForeignKey(Negotiator, on_delete=models.CASCADE, related_name='indicators')
+    date = models.DateField()
+    
+    # Indicadores clave
+    conversion_rate = models.FloatField(default=0.0, help_text='Tasa de conversión (%)')
+    total_revenue = models.FloatField(default=0.0, help_text='Recaudación total ($)')
+    absenteeism_rate = models.FloatField(default=0.0, help_text='Tasa de ausentismo (%)')
+    call_duration = models.FloatField(default=0.0, help_text='Duración promedio de llamadas (minutos)')
+    calls_made = models.IntegerField(default=0, help_text='Número de llamadas realizadas')
+    deals_closed = models.IntegerField(default=0, help_text='Acuerdos cerrados')
+    deals_failed = models.IntegerField(default=0, help_text='Acuerdos fallidos')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+        unique_together = ('negotiator', 'date')
+
+    def __str__(self):
+        return f'{self.negotiator.name} - {self.date}'
+
+    @property
+    def success_rate(self):
+        """Calcula la tasa de éxito basada en acuerdos cerrados vs fallidos"""
+        total_deals = self.deals_closed + self.deals_failed
+        if total_deals == 0:
+            return 0.0
+        return (self.deals_closed / total_deals) * 100
+
+    @property
+    def revenue_per_call(self):
+        """Calcula la recaudación promedio por llamada"""
+        if self.calls_made == 0:
+            return 0.0
+        return self.total_revenue / self.calls_made
