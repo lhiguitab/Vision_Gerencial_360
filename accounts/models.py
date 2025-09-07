@@ -68,6 +68,29 @@ class User(AbstractBaseUser, PermissionsMixin):
     def username(self):
         return self.cedula
 
+    def get_negotiators_with_pending_evaluations(self):
+        """
+        Retorna los negociadores de este líder que tienen evaluaciones pendientes
+        """
+        negotiators = self.negotiators.all()
+        pending_negotiators = []
+        
+        for negotiator in negotiators:
+            if negotiator.get_evaluation_status == "Pendiente":
+                last_evaluation = negotiator.evaluations.order_by('-date').first()
+                days_since_last = None
+                
+                if last_evaluation:
+                    days_since_last = (timezone.now() - last_evaluation.date).days
+                
+                pending_negotiators.append({
+                    'negotiator': negotiator,
+                    'last_evaluation_date': last_evaluation.date if last_evaluation else None,
+                    'days_since_last': days_since_last
+                })
+        
+        return pending_negotiators
+
 class AllowedCedula(models.Model):
     cedula = models.CharField(max_length=12, unique=True)
 
@@ -96,8 +119,8 @@ class Negotiator(models.Model):
         if not last_evaluation:
             return "Pendiente"
         
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        if last_evaluation.date < thirty_days_ago:
+        six_months_ago = timezone.now() - timedelta(days=180)
+        if last_evaluation.date < six_months_ago:
             return "Pendiente"
         
         return "Al día"

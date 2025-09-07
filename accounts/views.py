@@ -15,7 +15,30 @@ def profile_view(request):
 @login_required
 def lider_dashboard_view(request):
     negotiators = Negotiator.objects.filter(leader=request.user)
-    return render(request, 'accounts/lider_dashboard.html', {'negotiators': negotiators})
+    pending_negotiators = request.user.get_negotiators_with_pending_evaluations()
+    
+    context = {
+        'negotiators': negotiators,
+        'pending_negotiators': pending_negotiators,
+        'total_pending': len(pending_negotiators)
+    }
+    return render(request, 'accounts/lider_dashboard.html', context)
+
+@login_required
+def pending_evaluations_view(request):
+    """
+    Vista para mostrar las evaluaciones pendientes del líder
+    """
+    if request.user.role != 'lider':
+        return redirect('profile')
+    
+    pending_negotiators = request.user.get_negotiators_with_pending_evaluations()
+    
+    context = {
+        'pending_negotiators': pending_negotiators,
+        'total_pending': len(pending_negotiators)
+    }
+    return render(request, 'accounts/pending_evaluations.html', context)
 
 @login_required
 def administrativo_dashboard_view(request):

@@ -12,6 +12,41 @@
 </div>
 
 <div class="container">
+    <!-- Resumen de Evaluaciones Pendientes -->
+    {% if total_pending > 0 %}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Evaluaciones Pendientes
+                        </h5>
+                        <h2 class="card-text">{{ total_pending }}</h2>
+                        <p class="card-text">Negociadores requieren evaluación</p>
+                        <a href="{% url 'pending_evaluations' %}" class="btn btn-warning">
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-check-circle"></i>
+                            ¡Todo al día!
+                        </h5>
+                        <p class="card-text">No hay evaluaciones pendientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <h2>Mis Negociadores Asignados</h2>
     {% if negotiators %}
         <div class="list-group">
