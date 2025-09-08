@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 fw-bold">Nueva Evaluación</h1>
+            <div>
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary me-2">Volver al Negociador</a>
+                <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-secondary me-2">Dashboard</a>
+                <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+            </div>
+        </div>
+        <p class="fs-4">Evaluación de desempeño para {{ negotiator.name }} ({{ negotiator.cedula }})</p>
+    </div>
+</div>
+
+<div class="container">
+    {% if has_recent_evaluation %}
+        <div class="alert alert-warning" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle"></i>
+                Evaluación Reciente Detectada
+            </h5>
+            <p>Ya existe una evaluación reciente para este negociador del {{ recent_evaluation.date|date:"d/m/Y" }}.</p>
+            <p>No se puede crear una nueva evaluación tan pronto. Espere al menos 7 días entre evaluaciones.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-warning">
+                    Volver al Negociador
+                </a>
+            </p>
+        </div>
+    {% else %}
+        <!-- Información del negociador -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person"></i>
+                            Información del Negociador
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nombre:</strong> {{ negotiator.name }}</p>
+                                <p><strong>Cédula:</strong> {{ negotiator.cedula }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Estado actual:</strong> 
+                                    <span class="badge {% if negotiator.get_evaluation_status == 'Al día' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ negotiator.get_evaluation_status }}
+                                    </span>
+                                </p>
+                                <p><strong>Total de evaluaciones:</strong> {{ negotiator.get_evaluation_count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de evaluación -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Puntuación General -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star"></i>
+                        Puntuación General
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.overall_score.id_for_label }}" class="form-label">
+                                    {{ form.overall_score.label }}
+                                </label>
+                                {{ form.overall_score }}
+                                {% if form.overall_score.help_text %}
+                                    <div class="form-text">{{ form.overall_score.help_text }}</div>
+                                {% endif %}
+                                {% if form.overall_score.errors %}
+                                    <div class="text-danger">{{ form.overall_score.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i>
+                        Indicadores de Desempeño (KPIs)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Evalúe cada indicador de 0.0 a 10.0. Debe evaluar al menos un KPI.</p>
+                    
+                    <div class="row">
+                        {% for field in form %}
+                            {% if field.name|slice:":4" == "kpi_" %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                {{ field.label }}
+                                            </label>
+                                            {{ field }}
+                                            {% if field.help_text %}
+                                                <div class="form-text">{{ field.help_text }}</div>
+                                            {% endif %}
+                                            {% if field.errors %}
+                                                <div class="text-danger">{{ field.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comentarios -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-text"></i>
+                        Comentarios y Retroalimentación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.feedback.id_for_label }}" class="form-label">
+                            {{ form.feedback.label }}
+                        </label>
+                        {{ form.feedback }}
+                        {% if form.feedback.help_text %}
+                            <div class="form-text">{{ form.feedback.help_text }}</div>
+                        {% endif %}
+                        {% if form.feedback.errors %}
+                            <div class="text-danger">{{ form.feedback.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Errores generales del formulario -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Guardar Evaluación
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
