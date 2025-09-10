@@ -148,6 +148,34 @@ class Negotiator(models.Model):
         """
         return self.evaluations.count()
 
+    def calcular_puntuacion_hacer(self, periodo_dias=30):
+        """
+        Calcula la puntuación general del hacer (0-100) como el promedio de los KPIs porcentuales
+        (excluyendo recaudo) del último periodo_dias días. Cada KPI tiene el mismo peso.
+        """
+        from datetime import timedelta
+        from django.utils import timezone
+        kpi_fields = [
+            'conversion_de_ventas',
+            'porcentajes_cumplimiento_recaudo',
+            'porcentaje_cumplimiento_conversion',
+            'porcentaje_caidas_acuerdos',
+        ]
+        fecha_inicio = timezone.now().date() - timedelta(days=periodo_dias)
+        indicadores = self.indicators.filter(date__gte=fecha_inicio)
+        if not indicadores.exists():
+            return None
+        promedios = []
+        for kpi in kpi_fields:
+            valores = indicadores.values_list(kpi, flat=True)
+            valores = [v for v in valores if v is not None]
+            if valores:
+                promedios.append(sum(valores) / len(valores))
+        if not promedios:
+            return None
+        puntuacion_hacer = sum(promedios) / len(promedios)
+        return round(puntuacion_hacer, 2)
+
 class KPI(models.Model):
     KPI_TYPE_CHOICES = [
         ('score', 'Puntuación (0-10)'),

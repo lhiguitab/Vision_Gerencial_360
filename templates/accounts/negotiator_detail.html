@@ -49,7 +49,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="card-title">Calificación General: 
-                            <span class="badge bg-success fs-6">{{ last_evaluation.overall_score|floatformat:1 }}/10</span>
+                            <span class="badge bg-success fs-6">{{ negotiator.calcular_puntuacion_hacer|floatformat:1 }}/100</span>
                         </h5>
                         <p class="card-text"><strong>Evaluador:</strong> {{ last_evaluation.evaluator.first_name }} {{ last_evaluation.evaluator.last_name }}</p>
                     </div>
@@ -68,23 +68,6 @@
                     </div>
                 {% endif %}
                 
-                <h6>KPIs Evaluados:</h6>
-                <div class="row">
-                    {% for kpi_eval in last_evaluation.kpis.all %}
-                        <div class="col-md-6 col-lg-4 mb-2">
-                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
-                                <span>{{ kpi_eval.kpi.name }}</span>
-                                <span class="badge bg-primary">{{ kpi_eval.kpi|kpi_display:kpi_eval.score }}</span>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="col-12">
-                            <div class="alert alert-warning">
-                                No se evaluaron KPIs específicos en esta ocasión.
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
             </div>
         </div>
     {% else %}
@@ -95,15 +78,31 @@
     {% endif %}
 
     <div class="mt-4">
-        {% if not has_recent_evaluation %}
-            <a href="{% url 'start_evaluation' cedula=negotiator.cedula %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Iniciar Nueva Evaluación
-            </a>
-        {% else %}
-            <div class="alert alert-warning mt-2">
-                Ya existe una evaluación en progreso o reciente para este negociador ({{ recent_evaluation.date|date:"d/m/Y" }}). No se puede crear una nueva evaluación hasta que pasen 7 días.
-            </div>
-        {% endif %}
+        <a href="{% url 'start_evaluation' cedula=negotiator.cedula %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Iniciar Nueva Evaluación del Hacer
+        </a>
     </div>
+
+    <h3 class="mt-5">Historial de Evaluaciones</h3>
+    {% if negotiator.evaluations.all %}
+        <ul class="list-group">
+            {% for evaluation in negotiator.evaluations.all|dictsortreversed:"date" %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong>{{ evaluation.date|date:"d/m/Y" }}</strong> — 
+                        Calificación: <span class="badge bg-success">{{ evaluation.overall_score|floatformat:1 }}/10</span>
+                        {% if evaluation.feedback %} | {{ evaluation.feedback|truncatechars:50 }}{% endif %}
+                    </span>
+                    <span class="text-muted small">
+                        Evaluador: {{ evaluation.evaluator.first_name }} {{ evaluation.evaluator.last_name }}
+                    </span>
+                </li>
+            {% empty %}
+                <li class="list-group-item">No hay evaluaciones registradas.</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info mt-3">No hay evaluaciones registradas para este negociador.</div>
+    {% endif %}
 </div>
 {% endblock %}
