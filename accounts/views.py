@@ -56,17 +56,13 @@ def last_evaluation_view(request, cedula):
     negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
     last_evaluation = negotiator.get_last_evaluation()
     
-    # Obtener los KPIs de la última evaluación si existe
-    evaluation_kpis = []
-    if last_evaluation:
-        evaluation_kpis = last_evaluation.kpis.all().select_related('kpi')
-    
+    evaluation_kpis = last_evaluation.kpis.all() if last_evaluation else []
     context = {
         'negotiator': negotiator,
         'last_evaluation': last_evaluation,
-        'evaluation_kpis': evaluation_kpis,
         'has_evaluations': negotiator.has_evaluations(),
-        'evaluation_count': negotiator.get_evaluation_count()
+        'evaluation_count': negotiator.get_evaluation_count(),
+        'evaluation_kpis': evaluation_kpis
     }
     return render(request, 'accounts/last_evaluation.html', context)
 
@@ -80,36 +76,42 @@ def start_evaluation_view(request, cedula):
     
     negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
     
-    # Validar que no haya una evaluación reciente (menos de 7 días)
-    recent_evaluation = negotiator.evaluations.filter(
-        date__gte=timezone.now() - timezone.timedelta(days=7)
-    ).first()
-    
-    if recent_evaluation:
-        messages.warning(request, f'Ya existe una evaluación reciente para {negotiator.name} del {recent_evaluation.date.strftime("%d/%m/%Y")}. No se puede crear una nueva evaluación tan pronto.')
-        return redirect('negotiator_detail', cedula=cedula)
     
     if request.method == 'POST':
         form = EvaluationForm(request.POST)
         if form.is_valid():
             # Crear la evaluación
+            # Crear la evaluación
+            # Calcular la puntuación general automáticamente
+            overall_score = negotiator.calcular_puntuacion_hacer()
             evaluation = Evaluation.objects.create(
                 negotiator=negotiator,
                 evaluator=request.user,
-                overall_score=form.cleaned_data['overall_score'],
+                overall_score=overall_score if overall_score is not None else 0.0,
                 feedback=form.cleaned_data['feedback']
             )
+
+            # Crear EvaluationKPI para cada KPI de tipo porcentaje usando el indicador histórico más reciente
+            latest_indicator = negotiator.indicators.order_by('-date').first()
+            if latest_indicator:
+                kpis = KPI.objects.filter(kpi_type='percentage')
+                for kpi in kpis:
+                    # Mapear el nombre del KPI al campo del indicador
+                    kpi_field_map = {
+                        'Conversión de Ventas': 'conversion_de_ventas',
+                        'Porcentajes de Cumplimiento de Recaudo': 'porcentajes_cumplimiento_recaudo',
+                        'Porcentaje de Cumplimiento de Conversión': 'porcentaje_cumplimiento_conversion',
+                        'Porcentaje de Caídas de Acuerdos': 'porcentaje_caidas_acuerdos',
+                    }
+                    field_name = kpi_field_map.get(kpi.name)
+                    if field_name and hasattr(latest_indicator, field_name):
+                        value = getattr(latest_indicator, field_name)
+                        EvaluationKPI.objects.create(
+                            evaluation=evaluation,
+                            kpi=kpi,
+                            score=value
+                        )
             
-            # Crear los EvaluationKPI
-            for field_name, value in form.cleaned_data.items():
-                if field_name.startswith('kpi_') and value is not None:
-                    kpi_id = field_name.split('_')[1]
-                    kpi = KPI.objects.get(id=kpi_id)
-                    EvaluationKPI.objects.create(
-                        evaluation=evaluation,
-                        kpi=kpi,
-                        score=value
-                    )
             
             messages.success(request, f'Evaluación creada exitosamente para {negotiator.name}.')
             return redirect('negotiator_detail', cedula=cedula)
@@ -118,9 +120,7 @@ def start_evaluation_view(request, cedula):
     
     context = {
         'negotiator': negotiator,
-        'form': form,
-        'has_recent_evaluation': recent_evaluation is not None,
-        'recent_evaluation': recent_evaluation
+        'form': form
     }
     return render(request, 'accounts/start_evaluation.html', context)
 
@@ -203,14 +203,8 @@ def administrativo_dashboard_view(request):
 def negotiator_detail_view(request, cedula):
     negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
     last_evaluation = Evaluation.objects.filter(negotiator=negotiator).order_by('-date').first()
-    # Evaluación en progreso: menos de 7 días desde la última
-    recent_evaluation = negotiator.evaluations.filter(
-        date__gte=timezone.now() - timezone.timedelta(days=7)
-    ).first()
     context = {
         'negotiator': negotiator,
-        'last_evaluation': last_evaluation,
-        'has_recent_evaluation': recent_evaluation is not None,
-        'recent_evaluation': recent_evaluation
+        'last_evaluation': last_evaluation
     }
     return render(request, 'accounts/negotiator_detail.html', context)

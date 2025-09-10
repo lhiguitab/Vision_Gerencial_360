@@ -66,7 +66,8 @@
         <form method="post">
             {% csrf_token %}
             
-            <!-- Puntuación General -->
+
+            <!-- Puntuación General Calculada -->
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
@@ -78,57 +79,18 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="{{ form.overall_score.id_for_label }}" class="form-label">
-                                    {{ form.overall_score.label }}
-                                </label>
-                                {{ form.overall_score }}
-                                {% if form.overall_score.help_text %}
-                                    <div class="form-text">{{ form.overall_score.help_text }}</div>
-                                {% endif %}
-                                {% if form.overall_score.errors %}
-                                    <div class="text-danger">{{ form.overall_score.errors }}</div>
-                                {% endif %}
+                                <span class="fs-4 fw-bold text-success">
+                                    {% with puntuacion=negotiator.calcular_puntuacion_hacer %}
+                                        {{ puntuacion|floatformat:1 }}/100
+                                    {% endwith %}
+                                </span>
+                                <div class="form-text">Esta puntuación se calcula automáticamente a partir de los KPIs históricos.</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- KPIs -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-graph-up"></i>
-                        Indicadores de Desempeño (KPIs)
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">Evalúe cada indicador de 0.0 a 10.0. Debe evaluar al menos un KPI.</p>
-                    
-                    <div class="row">
-                        {% for field in form %}
-                            {% if field.name|slice:":4" == "kpi_" %}
-                                <div class="col-md-6 col-lg-4 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <label for="{{ field.id_for_label }}" class="form-label">
-                                                {{ field.label }}
-                                            </label>
-                                            {{ field }}
-                                            {% if field.help_text %}
-                                                <div class="form-text">{{ field.help_text }}</div>
-                                            {% endif %}
-                                            {% if field.errors %}
-                                                <div class="text-danger">{{ field.errors }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
 
             <!-- Comentarios -->
             <div class="card mb-4">
