@@ -12,4 +12,5 @@ urlpatterns = [
     path('negotiator/<str:cedula>/start-evaluation/', views.start_evaluation_view, name='start_evaluation'),
     path('negotiator/<str:cedula>/indicators/', views.negotiator_indicators_view, name='negotiator_indicators'),
     path('negotiator/<str:cedula>/indicators/api/', views.negotiator_indicators_api, name='negotiator_indicators_api'),
+    path('negotiator/<str:cedula>/start-ser-evaluation/', views.start_ser_evaluation_view, name='start_ser_evaluation'),
 ]

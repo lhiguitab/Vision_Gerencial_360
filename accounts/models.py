@@ -1,4 +1,3 @@
-
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import RegexValidator
@@ -117,6 +116,17 @@ class Negotiator(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_ultima_evaluacion_ser(self):
+        return self.ser_evaluations.order_by('-date').first()
+
+    def calcular_puntaje_total(self):
+        hacer = self.calcular_puntuacion_hacer()
+        ser_eval = self.get_ultima_evaluacion_ser()
+        ser = ser_eval.promedio if ser_eval else None
+        if hacer is not None and ser is not None:
+            return round(hacer * 0.7 + ser * 20 * 0.3, 2)  # ser (1-5) se escala a 100
+        return None
 
     @property
     def get_evaluation_status(self):
@@ -273,3 +283,24 @@ class NegotiatorIndicator(models.Model):
         if self.tiempo_hablando == 0:
             return 0.0
         return self.recaudacion_mensual / self.tiempo_hablando
+    
+    # === Evaluación del Ser ===
+class SerEvaluation(models.Model):
+    negotiator = models.ForeignKey('Negotiator', on_delete=models.CASCADE, related_name='ser_evaluations')
+    evaluator = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    actitud = models.PositiveSmallIntegerField()
+    trabajo_en_equipo = models.PositiveSmallIntegerField()
+    sentido_pertenencia = models.PositiveSmallIntegerField()
+    relacionamiento = models.PositiveSmallIntegerField()
+    compromiso = models.PositiveSmallIntegerField()
+
+    @property
+    def promedio(self):
+        return round((
+            self.actitud +
+            self.trabajo_en_equipo +
+            self.sentido_pertenencia +
+            self.relacionamiento +
+            self.compromiso
+        ) / 5.0, 2)

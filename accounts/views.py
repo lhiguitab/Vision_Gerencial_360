@@ -1,3 +1,35 @@
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import SerEvaluationForm
+from .models import SerEvaluation, Negotiator
+
+@login_required
+def start_ser_evaluation_view(request, cedula):
+    if request.user.role != 'lider':
+        return redirect('profile')
+    negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
+    if request.method == 'POST':
+        form = SerEvaluationForm(request.POST)
+        if form.is_valid():
+            SerEvaluation.objects.create(
+                negotiator=negotiator,
+                evaluator=request.user,
+                actitud=form.cleaned_data['actitud'],
+                trabajo_en_equipo=form.cleaned_data['trabajo_en_equipo'],
+                sentido_pertenencia=form.cleaned_data['sentido_pertenencia'],
+                relacionamiento=form.cleaned_data['relacionamiento'],
+                compromiso=form.cleaned_data['compromiso'],
+            )
+            messages.success(request, '¡Evaluación del Ser registrada correctamente!')
+            return redirect('negotiator_detail', cedula=cedula)
+    else:
+        form = SerEvaluationForm()
+    return render(request, 'accounts/start_ser_evaluation.html', {
+        'negotiator': negotiator,
+        'form': form
+    })
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages

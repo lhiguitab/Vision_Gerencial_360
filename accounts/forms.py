@@ -60,5 +60,24 @@ class EvaluationForm(forms.Form):
         }),
         required=False
     )
+    
+
+# Formulario para la Evaluación del Ser
+class SerEvaluationForm(forms.Form):
+    actitud = forms.ChoiceField(
+        label='Actitud', choices=[(i, i) for i in range(1, 6)], widget=forms.RadioSelect, required=True
+    )
+    trabajo_en_equipo = forms.ChoiceField(
+        label='Trabajo en equipo', choices=[(i, i) for i in range(1, 6)], widget=forms.RadioSelect, required=True
+    )
+    sentido_pertenencia = forms.ChoiceField(
+        label='Sentido de pertenencia', choices=[(i, i) for i in range(1, 6)], widget=forms.RadioSelect, required=True
+    )
+    relacionamiento = forms.ChoiceField(
+        label='Relacionamiento', choices=[(i, i) for i in range(1, 6)], widget=forms.RadioSelect, required=True
+    )
+    compromiso = forms.ChoiceField(
+        label='Compromiso con la empresa', choices=[(i, i) for i in range(1, 6)], widget=forms.RadioSelect, required=True
+    )
 
 
