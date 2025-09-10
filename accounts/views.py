@@ -82,10 +82,12 @@ def start_evaluation_view(request, cedula):
         if form.is_valid():
             # Crear la evaluación
             # Crear la evaluación
+            # Calcular la puntuación general automáticamente
+            overall_score = negotiator.calcular_puntuacion_hacer()
             evaluation = Evaluation.objects.create(
                 negotiator=negotiator,
                 evaluator=request.user,
-                overall_score=form.cleaned_data['overall_score'],
+                overall_score=overall_score if overall_score is not None else 0.0,
                 feedback=form.cleaned_data['feedback']
             )
 

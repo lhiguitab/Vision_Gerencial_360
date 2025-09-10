@@ -49,19 +49,8 @@ class CustomUserChangeForm(UserChangeForm):
 
 class EvaluationForm(forms.Form):
     """
-    Formulario para crear una nueva evaluación
+    Formulario para crear una nueva evaluación (solo feedback, la puntuación se calcula automáticamente)
     """
-    overall_score = forms.FloatField(
-        label='Puntuación General',
-        min_value=0.0,
-        max_value=10.0,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'step': '0.1',
-            'placeholder': 'Ej: 8.5'
-        })
-    )
-    
     feedback = forms.CharField(
         label='Comentarios y Retroalimentación',
         widget=forms.Textarea(attrs={
