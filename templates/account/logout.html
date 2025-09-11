@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h1 class="card-title text-center">Cerrar Sesión</h1>
+                    <p class="card-text text-center">¿Estás seguro de que quieres cerrar sesión?</p>
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <div class="d-grid">
+                            <button class="btn btn-danger" type="submit">Cerrar Sesión</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

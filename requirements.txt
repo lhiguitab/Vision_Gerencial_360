@@ -1,3 +1,4 @@
 django-allauth
 PyJWT
 cryptography
+Faker

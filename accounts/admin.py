@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Negotiator, AllowedCedula
+from .models import User, Negotiator, AllowedEmail
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class CustomUserAdmin(UserAdmin):
@@ -29,4 +29,4 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Negotiator)
-admin.site.register(AllowedCedula)
+admin.site.register(AllowedEmail)

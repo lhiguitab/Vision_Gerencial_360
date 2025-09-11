@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h1 class="card-title text-center">Registro</h1>
+                    <p class="card-text text-center">
+                        ¿Ya tienes una cuenta? Entonces por favor
+                        <a href="{{ login_url }}">inicia sesión</a>.
+                    </p>
+                    <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="submit">Registrarse</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
