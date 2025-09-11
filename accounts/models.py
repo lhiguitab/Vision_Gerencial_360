@@ -3,20 +3,25 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 class UserManager(BaseUserManager):
-    def create_user(self, cedula, password=None, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('El email es obligatorio')
+        
+        email = self.normalize_email(email)
+        # Validar contra la lista de emails permitidos
+        if not AllowedEmail.objects.filter(email__iexact=email).exists():
+            raise ValueError('El email no está permitido para registrarse.')
+
+        cedula = extra_fields.pop('cedula', None)
         if not cedula:
             raise ValueError('La Cédula es obligatoria')
-        
-        # Validar contra la lista de cédulas permitidas
-        if not AllowedCedula.objects.filter(cedula=cedula).exists():
-            raise ValueError('La cédula no está permitida para registrarse.')
 
-        user = self.model(cedula=cedula, **extra_fields)
+        user = self.model(email=email, cedula=cedula, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, cedula, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -25,8 +30,12 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        # Para el superusuario, no validamos contra la lista de cédulas permitidas
-        user = self.model(cedula=cedula, **extra_fields)
+        # Para el superusuario, no validamos contra la lista de emails permitidos
+        cedula = extra_fields.pop('cedula', None)
+        if not cedula:
+            raise ValueError('La Cédula es obligatoria para el superusuario')
+
+        user = self.model(email=email, cedula=cedula, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -57,15 +66,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'cedula'
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['cedula']
 
     def __str__(self):
-        return self.cedula
+        return self.email
 
     @property
     def username(self):
-        return self.cedula
+        return self.email
 
     def get_negotiators_with_pending_evaluations(self):
         """
@@ -95,11 +104,11 @@ class User(AbstractBaseUser, PermissionsMixin):
                 })
         return pending_negotiators
 
-class AllowedCedula(models.Model):
-    cedula = models.CharField(max_length=12, unique=True)
+class AllowedEmail(models.Model):
+    email = models.EmailField(max_length=255, unique=True)
 
     def __str__(self):
-        return self.cedula
+        return self.email
 
 from django.utils import timezone
 from datetime import timedelta

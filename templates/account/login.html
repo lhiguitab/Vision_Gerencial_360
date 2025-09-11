@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load allauth account %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-body">
+                    <h1 class="card-title text-center">Iniciar Sesión</h1>
+                    <p class="card-text text-center">
+                        Si aún no tienes una cuenta, por favor
+                        <a href="{{ signup_url }}">regístrate</a> primero.
+                    </p>
+                    <form class="login" method="post" action="{% url 'account_login' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="submit">Iniciar Sesión</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
