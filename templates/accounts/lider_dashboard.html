@@ -1,75 +1,134 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="display-5 fw-bold">Dashboard del Líder</h1>
-            <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+<div class="position-relative overflow-hidden p-3 p-md-5 text-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="col-md-8 p-lg-5 mx-auto my-5">
+        <h1 class="display-4 fw-bold text-black mb-3">Dashboard del Líder</h1>
+        <p class="lead fw-normal text-black fw-semibold">Bienvenido, <span class="text-black fw-semibold">{{ user.first_name }} {{ user.last_name }}</span></p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="/accounts/logout" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
+                <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+            </a>
         </div>
-        <p class="fs-4">Bienvenido, {{ user.first_name }} {{ user.last_name }}.</p>
     </div>
 </div>
 
-<div class="container">
+<div class="container my-5">
     <!-- Resumen de Evaluaciones Pendientes -->
-    {% if total_pending > 0 %}
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card bg-warning text-dark">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Evaluaciones Pendientes
-                        </h5>
-                        <h2 class="card-text">{{ total_pending }}</h2>
-                        <p class="card-text">Negociadores requieren evaluación</p>
-                        <a href="{% url 'pending_evaluations' %}" class="btn btn-warning">
-                            Ver Detalles
-            {% else %}
-                <div class="card bg-success text-white mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">¡Felicidades!</h5>
-                        <p class="card-text fw-bold">Todos los negociadores están al día. No hay evaluaciones pendientes.</p>
+    <div class="row mb-5">
+        {% if total_pending > 0 %}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg bg-gradient text-black h-100" style="background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);">
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">{{ total_pending }}</h3>
+                        <p class="mb-3 opacity-90">Evaluaciones Pendientes</p>
+                        <a href="{% url 'pending_evaluations' %}" class="btn btn-light rounded-pill px-4">
+                            <i class="bi bi-eye me-2"></i>Ver Detalles
+                        </a>
                     </div>
                 </div>
-            <div class="col-md-6">
-                <div class="card bg-success text-white">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-check-circle"></i>
-                            ¡Todo al día!
-                        </h5>
-                        <p class="card-text">No hay evaluaciones pendientes</p>
+            </div>
+        {% else %}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg bg-gradient text-white h-100" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);">
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-check-circle-fill fs-1"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">¡Todo al día!</h4>
+                        <p class="mb-0 opacity-90">No hay evaluaciones pendientes</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-people-fill text-primary fs-4"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Mis Negociadores</h5>
+                    </div>
+                    <p class="card-text text-muted mb-3">Gestiona y evalúa a tu equipo de negociadores.</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary px-3 py-2">{{ negotiators|length }} asignados</span>
                     </div>
                 </div>
             </div>
         </div>
-    {% endif %}
+    </div>
 
-    <h2>Mis Negociadores Asignados</h2>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="h3 mb-0 text-dark fw-bold">Mis Negociadores Asignados</h2>
+        {% if negotiators %}
+            <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ negotiators|length }} total</span>
+        {% endif %}
+    </div>
+
     {% if negotiators %}
-        <div class="list-group">
+        <div class="row g-4">
             {% for negotiator in negotiators %}
-                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ negotiator.name }}</h5>
-                        <small>ID: {{ negotiator.cedula }}</small>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100 hover-shadow">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title fw-bold text-dark mb-1">{{ negotiator.name }}</h5>
+                                    <p class="text-muted mb-0">
+                                        <i class="bi bi-credit-card me-1"></i>
+                                        ID: {{ negotiator.cedula }}
+                                    </p>
+                                </div>
+                                <span class="badge {% if negotiator.get_evaluation_status == 'Al día' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                                    {{ negotiator.get_evaluation_status }}
+                                </span>
+                            </div>
+                            
+                            <!-- Mostrar número de evaluaciones pendientes si aplica -->
+                            {% for item in pending_negotiators %}
+                                {% if item.negotiator.id == negotiator.id %}
+                                    <div class="alert alert-warning border-0 py-2 px-3 mb-3">
+                                        <small class="fw-semibold">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {{ item.pending_count }} evaluaciones pendientes
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-primary rounded-pill">
+                                    <i class="bi bi-eye me-2"></i>Ver Detalles
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <p class="mb-1">Estado de evaluaciones: {{ negotiator.get_evaluation_status }}</p>
-                    <!-- Mostrar número de evaluaciones pendientes si aplica -->
-                    {% for item in pending_negotiators %}
-                        {% if item.negotiator.id == negotiator.id %}
-                            <p class="mb-1 text-danger fw-bold">Evaluaciones pendientes: {{ item.pending_count }}</p>
-                        {% endif %}
-                    {% endfor %}
-                </a>
+                </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="alert alert-info" role="alert">
-            Actualmente no tienes negociadores asignados.
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-muted mb-3">Sin negociadores asignados</h4>
+            <p class="text-muted">Actualmente no tienes negociadores asignados a tu equipo.</p>
         </div>
     {% endif %}
 </div>
+
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+.hover-shadow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+</style>
 {% endblock %}
