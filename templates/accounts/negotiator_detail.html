@@ -30,6 +30,9 @@
                 <a href="{% url 'last_evaluation' cedula=negotiator.cedula %}" class="btn btn-info me-2">
                     <i class="bi bi-eye"></i> Ver Detalles Completos
                 </a>
+                <a href="{% url 'exportar_evaluacion_pdf' cedula=negotiator.cedula %}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                </a>
             {% endif %}
             <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success">
                 <i class="bi bi-graph-up"></i> Indicadores Históricos
