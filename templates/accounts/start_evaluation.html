@@ -1,60 +1,88 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="display-5 fw-bold">Nueva Evaluación</h1>
-            <div>
-                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary me-2">Volver al Negociador</a>
-                <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-secondary me-2">Dashboard</a>
-                <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+<div class="bg-gradient text-white py-5" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">Nueva Evaluación</h1>
+                <p class="lead mb-0">Evaluación de desempeño para <span class="fw-semibold">{{ negotiator.name }}</span> ({{ negotiator.cedula }})</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-arrow-left me-1"></i>Negociador
+                    </a>
+                    <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-house me-1"></i>Dashboard
+                    </a>
+                    <a href="/accounts/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+                    </a>
+                </div>
             </div>
         </div>
-        <p class="fs-4">Evaluación de desempeño para {{ negotiator.name }} ({{ negotiator.cedula }})</p>
     </div>
 </div>
 
-<div class="container">
+<div class="container my-5">
     {% if has_recent_evaluation %}
-        <div class="alert alert-warning" role="alert">
-            <h5 class="alert-heading">
-                <i class="bi bi-exclamation-triangle"></i>
-                Evaluación Reciente Detectada
-            </h5>
-            <p>Ya existe una evaluación reciente para este negociador del {{ recent_evaluation.date|date:"d/m/Y" }}.</p>
-            <p>No se puede crear una nueva evaluación tan pronto. Espere al menos 7 días entre evaluaciones.</p>
-            <hr>
-            <p class="mb-0">
-                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-warning">
-                    Volver al Negociador
-                </a>
-            </p>
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="fw-bold text-warning mb-3">Evaluación Reciente Detectada</h3>
+            <p class="lead text-muted mb-4">Ya existe una evaluación reciente del {{ recent_evaluation.date|date:"d/m/Y" }}. Espere al menos 7 días entre evaluaciones.</p>
+            <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-warning btn-lg rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Negociador
+            </a>
         </div>
     {% else %}
         <!-- Información del negociador -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-person"></i>
+        <div class="row mb-5">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white border-0 rounded-top">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2"></i>
                             Información del Negociador
                         </h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
+                    <div class="card-body p-4">
+                        <div class="row g-4">
                             <div class="col-md-6">
-                                <p><strong>Nombre:</strong> {{ negotiator.name }}</p>
-                                <p><strong>Cédula:</strong> {{ negotiator.cedula }}</p>
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-person text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Nombre</small>
+                                        <strong>{{ negotiator.name }}</strong>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-credit-card text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Cédula</small>
+                                        <strong>{{ negotiator.cedula }}</strong>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Estado actual:</strong> 
-                                    <span class="badge {% if negotiator.get_evaluation_status == 'Al día' %}bg-success{% else %}bg-warning{% endif %}">
-                                        {{ negotiator.get_evaluation_status }}
-                                    </span>
-                                </p>
-                                <p><strong>Total de evaluaciones:</strong> {{ negotiator.get_evaluation_count }}</p>
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-check-circle text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Estado actual</small>
+                                        <span class="badge {% if negotiator.get_evaluation_status == 'Al día' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                                            {{ negotiator.get_evaluation_status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-graph-up text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Total de evaluaciones</small>
+                                        <strong>{{ negotiator.get_evaluation_count }}</strong>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -66,43 +94,37 @@
         <form method="post">
             {% csrf_token %}
             
-
             <!-- Puntuación General Calculada -->
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-star"></i>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white border-0">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-star-fill me-2"></i>
                         Puntuación General
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <span class="fs-4 fw-bold text-success">
-                                    {% with puntuacion=negotiator.calcular_puntuacion_hacer %}
-                                        {{ puntuacion|floatformat:1 }}/100
-                                    {% endwith %}
-                                </span>
-                                <div class="form-text">Esta puntuación se calcula automáticamente a partir de los KPIs históricos.</div>
-                            </div>
+                <div class="card-body p-4">
+                    <div class="text-center">
+                        <div class="display-4 fw-bold text-success mb-2">
+                            {% with puntuacion=negotiator.calcular_puntuacion_hacer %}
+                                {{ puntuacion|floatformat:1 }}<small class="fs-5 text-muted">/100</small>
+                            {% endwith %}
                         </div>
+                        <p class="text-muted mb-0">Esta puntuación se calcula automáticamente a partir de los KPIs históricos.</p>
                     </div>
                 </div>
             </div>
 
-
             <!-- Comentarios -->
-            <div class="card mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">
-                        <i class="bi bi-chat-text"></i>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark border-0">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-chat-text-fill me-2"></i>
                         Comentarios y Retroalimentación
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="mb-3">
-                        <label for="{{ form.feedback.id_for_label }}" class="form-label">
+                        <label for="{{ form.feedback.id_for_label }}" class="form-label fw-semibold">
                             {{ form.feedback.label }}
                         </label>
                         {{ form.feedback }}
@@ -110,7 +132,7 @@
                             <div class="form-text">{{ form.feedback.help_text }}</div>
                         {% endif %}
                         {% if form.feedback.errors %}
-                            <div class="text-danger">{{ form.feedback.errors }}</div>
+                            <div class="text-danger mt-2">{{ form.feedback.errors }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -118,18 +140,19 @@
 
             <!-- Errores generales del formulario -->
             {% if form.non_field_errors %}
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger border-0 shadow-sm" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     {{ form.non_field_errors }}
                 </div>
             {% endif %}
 
             <!-- Botones -->
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Cancelar
+            <div class="d-flex justify-content-between gap-3">
+                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Cancelar
                 </a>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle"></i> Guardar Evaluación
+                <button type="submit" class="btn btn-success btn-lg rounded-pill px-4">
+                    <i class="bi bi-check-circle-fill me-2"></i>Guardar Evaluación
                 </button>
             </div>
         </form>

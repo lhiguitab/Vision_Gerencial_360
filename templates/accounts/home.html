@@ -1,14 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5 text-center">
-        <h1 class="display-5 fw-bold">Bienvenido a Vision Gerencial 360</h1>
-        <p class="col-md-8 fs-4 mx-auto">Tu plataforma para la gestión integral de negociadores.</p>
-        <hr class="my-4">
-        <p>Inicia sesión para acceder a tu dashboard personalizado.</p>
-        <a class="btn btn-primary btn-lg" href="{% url 'account_login' %}" role="button">Iniciar Sesión</a>
-        <a class="btn btn-outline-secondary btn-lg" href="{% url 'account_signup' %}" role="button">Registrarse</a>
+<div class="position-relative overflow-hidden p-3 p-md-5 text-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <div class="col-md-10 p-lg-5 mx-auto my-5">
+        <div class="mb-5">
+            <div class="mb-4">
+                <i class="bi bi-eye-fill text-white" style="font-size: 4rem;"></i>
+            </div>
+            <h1 class="display-3 fw-bold text-white mb-4">Vision Gerencial 360</h1>
+            <p class="lead fw-normal text-white-50 mb-5 mx-auto" style="max-width: 600px;">
+                Tu plataforma integral para la gestión y evaluación de negociadores. 
+                Potencia el rendimiento de tu equipo con herramientas avanzadas de análisis.
+            </p>
+        </div>
+        
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-white bg-opacity-90 h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                            <i class="bi bi-graph-up text-primary fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Evaluaciones</h5>
+                        <p class="text-muted small mb-0">Sistema completo de evaluación de desempeño</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-white bg-opacity-90 h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                            <i class="bi bi-people-fill text-success fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Gestión de Equipos</h5>
+                        <p class="text-muted small mb-0">Administra y supervisa tu equipo de negociadores</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-white bg-opacity-90 h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                            <i class="bi bi-bar-chart-fill text-warning fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Análisis Avanzado</h5>
+                        <p class="text-muted small mb-0">Reportes detallados y métricas de rendimiento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'account_login' %}" role="button">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+            </a>
+            <a class="btn btn-outline-light btn-lg px-5 rounded-pill" href="{% url 'account_signup' %}" role="button">
+                <i class="bi bi-person-plus me-2"></i>Registrarse
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

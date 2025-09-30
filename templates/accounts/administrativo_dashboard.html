@@ -1,11 +1,48 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-        <h1 class="display-5 fw-bold">Dashboard Administrativo</h1>
-        <p class="col-md-8 fs-4">Bienvenido, {{ user.username }}. Aquí podrás gestionar las tareas administrativas.</p>
-        <a href="/accounts/logout" class="btn btn-danger btn-lg">Cerrar Sesión</a>
+<div class="position-relative overflow-hidden p-3 p-md-5 text-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="col-md-8 p-lg-5 mx-auto my-5">
+        <h1 class="display-4 fw-bold text-white mb-3">Dashboard Administrativo</h1>
+        <p class="lead fw-normal text-white-50 mb-4">Bienvenido, <span class="text-white fw-semibold">{{ user.username }}</span>. Gestiona todas las tareas administrativas desde aquí.</p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="/accounts/logout" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
+                <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    <div class="product-device shadow-sm d-none d-md-block"></div>
+    <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-people-fill text-primary fs-4"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Gestión de Usuarios</h5>
+                    </div>
+                    <p class="card-text text-muted">Administra usuarios, roles y permisos del sistema.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-graph-up text-success fs-4"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Reportes y Análisis</h5>
+                    </div>
+                    <p class="card-text text-muted">Visualiza métricas y genera reportes del sistema.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,21 +1,62 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Evaluación del Ser para {{ negotiator.name }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="text-danger">{{ field.errors }}</div>
-                {% endif %}
+<div class="bg-gradient text-white py-5" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3 text-dark">Evaluación del Ser</h1>
+                <p class="lead mb-0 text-dark opacity-75">Evaluación integral para <span class="fw-semibold text-dark">{{ negotiator.name }}</span></p>
             </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-success">Guardar Evaluación del Ser</button>
-        <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary ms-2">Cancelar</a>
-    </form>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-dark btn-sm rounded-pill px-3">
+                        <i class="bi bi-arrow-left me-1"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h4 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-heart-fill me-2"></i>
+                        Formulario de Evaluación del Ser
+                    </h4>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold text-dark">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger mt-2">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between gap-3 mt-5">
+                            <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill px-4">
+                                <i class="bi bi-check-circle-fill me-2"></i>Guardar Evaluación del Ser
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

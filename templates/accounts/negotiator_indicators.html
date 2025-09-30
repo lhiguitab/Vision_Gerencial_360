@@ -2,83 +2,92 @@
 {% load kpi_tags %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="display-5 fw-bold">Indicadores Históricos</h1>
-            <div>
-                <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-secondary me-2">Volver al Negociador</a>
-                <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-secondary me-2">Dashboard</a>
-                <a href="/accounts/logout" class="btn btn-danger">Cerrar Sesión</a>
+<div class="bg-gradient text-white py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">Indicadores Históricos</h1>
+                <p class="lead mb-0">Análisis de desempeño para <span class="fw-semibold">{{ negotiator.name }}</span> ({{ negotiator.cedula }})</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-arrow-left me-1"></i>Negociador
+                    </a>
+                    <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-house me-1"></i>Dashboard
+                    </a>
+                    <a href="/accounts/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+                    </a>
+                </div>
             </div>
         </div>
-        <p class="fs-4">Análisis de desempeño para {{ negotiator.name }} ({{ negotiator.cedula }})</p>
     </div>
 </div>
 
-<div class="container">
+<div class="container my-5">
     {% if has_indicators %}
         <!-- Indicadores actuales -->
         {% if latest_indicator %}
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-graph-up"></i>
-                                Indicadores Actuales ({{ latest_indicator.date|date:"d/m/Y" }})
-                            </h5>
+            <div class="mb-5">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h2 class="h3 mb-0 text-dark fw-bold">Indicadores Actuales</h2>
+                    <span class="badge bg-primary px-3 py-2 rounded-pill">{{ latest_indicator.date|date:"d/m/Y" }}</span>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);">
+                            <div class="card-body p-4 text-center">
+                                <i class="bi bi-graph-up fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-90">Conversión de Ventas</h6>
+                                <h3 class="fw-bold">{{ latest_indicator.conversion_de_ventas }}%</h3>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-success text-white">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">Conversión de Ventas</h6>
-                                            <h4>{{ latest_indicator.conversion_de_ventas }}%</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-info text-white">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">Recaudación Mensual</h6>
-                                            <h4>${{ latest_indicator.recaudacion_mensual|floatformat:0 }}</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-warning text-dark">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">Tiempo Hablando</h6>
-                                            <h4>{{ latest_indicator.tiempo_hablando }} horas</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-primary text-white">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">% Cumplimiento Recaudo</h6>
-                                            <h4>{{ latest_indicator.porcentajes_cumplimiento_recaudo }}%</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-secondary text-white">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">% Cumplimiento Conversión</h6>
-                                            <h4>{{ latest_indicator.porcentaje_cumplimiento_conversion }}%</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card bg-danger text-white">
-                                        <div class="card-body text-center">
-                                            <h6 class="card-title">% Caídas de Acuerdos</h6>
-                                            <h4>{{ latest_indicator.porcentaje_caidas_acuerdos }}%</h4>
-                                        </div>
-                                    </div>
-                                </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="card-body p-4 text-center">
+                                <i class="bi bi-currency-dollar fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-90">Recaudación Mensual</h6>
+                                <h3 class="fw-bold">${{ latest_indicator.recaudacion_mensual|floatformat:0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);">
+                            <div class="card-body p-4 text-center">
+                                <i class="bi bi-clock fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-90">Tiempo Hablando</h6>
+                                <h3 class="fw-bold">{{ latest_indicator.tiempo_hablando }} hrs</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="card-body p-4 text-center">
+                                <i class="bi bi-target fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-90">% Cumplimiento Recaudo</h6>
+                                <h3 class="fw-bold">{{ latest_indicator.porcentajes_cumplimiento_recaudo }}%</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                            <div class="card-body p-4 text-center text-dark">
+                                <i class="bi bi-check-circle fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-75">% Cumplimiento Conversión</h6>
+                                <h3 class="fw-bold">{{ latest_indicator.porcentaje_cumplimiento_conversion }}%</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+                            <div class="card-body p-4 text-center">
+                                <i class="bi bi-exclamation-triangle fs-2 mb-3"></i>
+                                <h6 class="card-title opacity-90">% Caídas de Acuerdos</h6>
+                                <h3 class="fw-bold">{{ latest_indicator.porcentaje_caidas_acuerdos }}%</h3>
                             </div>
                         </div>
                     </div>
@@ -87,64 +96,85 @@
         {% endif %}
 
         <!-- Gráficos de tendencias -->
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de Conversión de Ventas (%)</h5></div>
-                    <div class="card-body"><canvas id="conversionVentasChart" width="400" height="200"></canvas></div>
+        <div class="mb-4">
+            <h2 class="h3 mb-4 text-dark fw-bold">Tendencias Históricas</h2>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de Conversión de Ventas (%)</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="conversionVentasChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de Recaudación Mensual ($)</h5></div>
-                    <div class="card-body"><canvas id="recaudacionMensualChart" width="400" height="200"></canvas></div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de Recaudación Mensual ($)</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="recaudacionMensualChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de Tiempo Hablando (horas)</h5></div>
-                    <div class="card-body"><canvas id="tiempoHablandoChart" width="400" height="200"></canvas></div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de Tiempo Hablando (horas)</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="tiempoHablandoChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de % Cumplimiento Recaudo</h5></div>
-                    <div class="card-body"><canvas id="cumplimientoRecaudoChart" width="400" height="200"></canvas></div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de % Cumplimiento Recaudo</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="cumplimientoRecaudoChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de % Cumplimiento Conversión</h5></div>
-                    <div class="card-body"><canvas id="cumplimientoConversionChart" width="400" height="200"></canvas></div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de % Cumplimiento Conversión</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="cumplimientoConversionChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header"><h5 class="mb-0">Tendencia de % Caídas de Acuerdos</h5></div>
-                    <div class="card-body"><canvas id="caidasAcuerdosChart" width="400" height="200"></canvas></div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light border-0">
+                        <h6 class="mb-0 fw-semibold">Tendencia de % Caídas de Acuerdos</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="caidasAcuerdosChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
     {% else %}
         <!-- No hay indicadores -->
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-info" role="alert">
-                    <h4 class="alert-heading">
-                        <i class="bi bi-info-circle"></i>
-                        Sin Datos de Indicadores
-                    </h4>
-                    <p>Este negociador no tiene datos de indicadores históricos disponibles.</p>
-                    <p>Los datos se actualizan automáticamente desde Databricks en tiempo real.</p>
-                    <hr>
-                    <p class="mb-0">
-                        <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-primary">
-                            Volver al Negociador
-                        </a>
-                    </p>
-                </div>
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="bi bi-info-circle text-muted" style="font-size: 4rem;"></i>
             </div>
+            <h3 class="fw-bold text-muted mb-3">Sin Datos de Indicadores</h3>
+            <p class="lead text-muted mb-4">Este negociador no tiene datos de indicadores históricos disponibles.</p>
+            <p class="text-muted mb-4">Los datos se actualizan automáticamente desde Databricks en tiempo real.</p>
+            <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-primary btn-lg rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Negociador
+            </a>
         </div>
     {% endif %}
 </div>
@@ -159,8 +189,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
     .then(data => {
         const commonOptions = {
             responsive: true,
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                },
+                y: {
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                }
+            }
         };
+        
         // Gráfico de Conversión de Ventas
         new Chart(document.getElementById('conversionVentasChart'), {
             type: 'line',
@@ -171,18 +219,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.conversion_de_ventas,
                     borderColor: 'rgb(75, 192, 192)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(75, 192, 192)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Porcentaje (%)' }
                     }
                 }
             }
         });
+        
         // Gráfico de Recaudación Mensual
         new Chart(document.getElementById('recaudacionMensualChart'), {
             type: 'line',
@@ -193,18 +249,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.recaudacion_mensual,
                     borderColor: 'rgb(54, 162, 235)',
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Pesos ($)' }
                     }
                 }
             }
         });
+        
         // Gráfico de Tiempo Hablando
         new Chart(document.getElementById('tiempoHablandoChart'), {
             type: 'line',
@@ -215,18 +279,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.tiempo_hablando,
                     borderColor: 'rgb(255, 205, 86)',
                     backgroundColor: 'rgba(255, 205, 86, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(255, 205, 86)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Horas' }
                     }
                 }
             }
         });
+        
         // Gráfico de % Cumplimiento Recaudo
         new Chart(document.getElementById('cumplimientoRecaudoChart'), {
             type: 'line',
@@ -237,18 +309,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.porcentajes_cumplimiento_recaudo,
                     borderColor: 'rgb(153, 102, 255)',
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(153, 102, 255)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Porcentaje (%)' }
                     }
                 }
             }
         });
+        
         // Gráfico de % Cumplimiento Conversión
         new Chart(document.getElementById('cumplimientoConversionChart'), {
             type: 'line',
@@ -259,18 +339,26 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.porcentaje_cumplimiento_conversion,
                     borderColor: 'rgb(255, 159, 64)',
                     backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(255, 159, 64)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Porcentaje (%)' }
                     }
                 }
             }
         });
+        
         // Gráfico de % Caídas de Acuerdos
         new Chart(document.getElementById('caidasAcuerdosChart'), {
             type: 'line',
@@ -281,13 +369,20 @@ fetch('{% url "negotiator_indicators_api" cedula=negotiator.cedula %}')
                     data: data.porcentaje_caidas_acuerdos,
                     borderColor: 'rgb(255, 99, 132)',
                     backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    tension: 0.1
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgb(255, 99, 132)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
                 }]
             },
             options: {
                 ...commonOptions,
                 scales: {
+                    ...commonOptions.scales,
                     y: {
+                        ...commonOptions.scales.y,
                         title: { display: true, text: 'Porcentaje (%)' }
                     }
                 }
