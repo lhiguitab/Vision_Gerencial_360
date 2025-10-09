@@ -422,7 +422,7 @@ def _round(val):
         return None
     try:
         return round(float(val), 2)
-    except Exception:
+    except (ValueError, TypeError):
         return val
 
 @login_required
