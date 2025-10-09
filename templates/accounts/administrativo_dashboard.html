@@ -1,48 +1,108 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="position-relative overflow-hidden p-3 p-md-5 text-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="col-md-8 p-lg-5 mx-auto my-5">
-        <h1 class="display-4 fw-bold text-white mb-3">Dashboard Administrativo</h1>
-        <p class="lead fw-normal text-white-50 mb-4">Bienvenido, <span class="text-white fw-semibold">{{ user.username }}</span>. Gestiona todas las tareas administrativas desde aquí.</p>
-        <div class="d-flex gap-3 justify-content-center">
-            <a href="/accounts/logout" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
-                <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-            </a>
+<div class="p-4 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-2">
+        <h1 class="display-6 fw-bold">Dashboard Administrativo</h1>
+        <p class="col-md-10">Bienvenido, {{ user.username }}. Gestión de resultados y KPIs por líder.</p>
+        <div class="d-flex gap-2">
+            <a href="/accounts/logout" class="btn btn-outline-danger">Cerrar Sesión</a>
         </div>
     </div>
-    <div class="product-device shadow-sm d-none d-md-block"></div>
-    <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
 </div>
 
-<div class="container my-5">
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-people-fill text-primary fs-4"></i>
-                        </div>
-                        <h5 class="card-title mb-0">Gestión de Usuarios</h5>
-                    </div>
-                    <p class="card-text text-muted">Administra usuarios, roles y permisos del sistema.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="bi bi-graph-up text-success fs-4"></i>
-                        </div>
-                        <h5 class="card-title mb-0">Reportes y Análisis</h5>
-                    </div>
-                    <p class="card-text text-muted">Visualiza métricas y genera reportes del sistema.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="card mb-4">
+  <div class="card-body">
+    <form class="row g-3" method="get">
+      <div class="col-auto">
+        <label class="form-label">Año</label>
+        <input type="number" class="form-control" name="anio" value="{{ anio }}" min="2020" max="2100" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Semestre</label>
+        <select class="form-select" name="semestre">
+          <option value="1" {% if semestre == '1' %}selected{% endif %}>1 (Ene-Jun)</option>
+          <option value="2" {% if semestre == '2' %}selected{% endif %}>2 (Jul-Dic)</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Ordenar por</label>
+        <select class="form-select" name="ordenar_por">
+          <option value="desempeno" {% if ordenar_por == 'desempeno' %}selected{% endif %}>Desempeño</option>
+          <option value="avg_conversion" {% if ordenar_por == 'avg_conversion' %}selected{% endif %}>Conv. Ventas</option>
+          <option value="avg_cump_recaudo" {% if ordenar_por == 'avg_cump_recaudo' %}selected{% endif %}>Cumpl. Recaudo</option>
+          <option value="avg_cump_conv" {% if ordenar_por == 'avg_cump_conv' %}selected{% endif %}>Cumpl. Conversión</option>
+          <option value="avg_caidas" {% if ordenar_por == 'avg_caidas' %}selected{% endif %}>Caídas Acuerdos</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Dirección</label>
+        <select class="form-select" name="direccion">
+          <option value="desc" {% if direccion == 'desc' %}selected{% endif %}>Mayor a menor</option>
+          <option value="asc" {% if direccion == 'asc' %}selected{% endif %}>Menor a mayor</option>
+        </select>
+      </div>
+      <div class="col-auto align-self-end">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Actualizar</button>
+      </div>
+      <div class="col-auto align-self-end">
+        <a class="btn btn-success" href="{% url 'exportar_resultados_excel' %}?anio={{ anio }}&semestre={{ semestre }}">
+          <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+        </a>
+      </div>
+    </form>
+    <small class="text-muted">Rango: {{ start_date }} a {{ end_date }}</small>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Indicadores consolidados por líder</div>
+  <div class="card-body table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Líder</th>
+          <th>Correo</th>
+          <th>Negociadores</th>
+          <th>Conv. Ventas (%)</th>
+          <th>Cumpl. Recaudo (%)</th>
+          <th>Cumpl. Conversión (%)</th>
+          <th>Caídas Acuerdos (%)</th>
+          <th>Tiempo Hablando (h)</th>
+          <th>Recaudo ($)</th>
+          <th>Desempeño</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in leaders_data %}
+        <tr>
+          <td>{{ l.nombre }}</td>
+          <td>{{ l.email }}</td>
+          <td>{{ l.equipos }}</td>
+          <td>{{ l.avg_conversion|floatformat:2 }}</td>
+          <td>{{ l.avg_cump_recaudo|floatformat:2 }}</td>
+          <td>{{ l.avg_cump_conv|floatformat:2 }}</td>
+          <td>{{ l.avg_caidas|floatformat:2 }}</td>
+          <td>{{ l.avg_tiempo|floatformat:2 }}</td>
+          <td>${{ l.avg_recaudo|floatformat:0 }}</td>
+          <td>
+            {% if l.desempeno %}
+            <span class="badge {% if l.desempeno >= 80 %}bg-success{% elif l.desempeno >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+              {{ l.desempeno|floatformat:2 }}
+            </span>
+            {% else %}
+            <span class="text-muted">N/D</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" class="text-center text-muted">Sin datos para el rango seleccionado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer text-muted">
+    Actualiza los filtros para cambiar el semestre o el orden.
+  </div>
 </div>
 {% endblock %}

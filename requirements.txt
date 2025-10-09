@@ -2,3 +2,5 @@ django-allauth
 PyJWT
 cryptography
 Faker
+openpyxl
+reportlab
