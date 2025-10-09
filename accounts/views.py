@@ -453,7 +453,7 @@ def exportar_evaluacion_pdf(request, cedula):
         from reportlab.lib import colors
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet
-    except Exception:
+    except ImportError:
         return HttpResponse('Falta dependencia reportlab. Instálala e inténtalo de nuevo.', status=500)
 
     from io import BytesIO
