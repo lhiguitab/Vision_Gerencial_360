@@ -360,7 +360,7 @@ def exportar_resultados_excel(request):
     try:
         import openpyxl
         from openpyxl.utils import get_column_letter
-    except Exception:
+    except ImportError:
         return HttpResponse('Falta dependencia openpyxl. Instálala e inténtalo de nuevo.', status=500)
 
     wb = openpyxl.Workbook()
