@@ -300,10 +300,13 @@ def administrativo_dashboard_view(request):
         })
 
     # Ordenamiento
+    allowed_sort_keys = ['nombre', 'desempeno', 'conversion', 'cump_recaudo', 'cump_conv', 'caidas', 'evaluaciones', 'ser']
     ordenar_por = request.GET.get('ordenar_por') or 'desempeno'
+    if ordenar_por not in allowed_sort_keys:
+        ordenar_por = 'desempeno'
     direccion = request.GET.get('direccion') or 'desc'
     reverse = True if direccion == 'desc' else False
-    leaders_data.sort(key=lambda x: (x[ordenar_por] is None, x[ordenar_por]), reverse=reverse)
+    leaders_data.sort(key=lambda x: (x.get(ordenar_por) is None, x.get(ordenar_por)), reverse=reverse)
 
     context = {
         'leaders_data': leaders_data,
