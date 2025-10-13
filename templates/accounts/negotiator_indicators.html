@@ -7,17 +7,17 @@
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-5 fw-bold mb-3">Indicadores Históricos</h1>
-                <p class="lead mb-0">Análisis de desempeño para <span class="fw-semibold">{{ negotiator.name }}</span> ({{ negotiator.cedula }})</p>
+                <p class="lead text-dark mb-0">Análisis de desempeño para <span class="fw-semibold">{{ negotiator.name }}</span> ({{ negotiator.cedula }})</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                 <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
                     <a href="{% url 'negotiator_detail' cedula=negotiator.cedula %}" class="btn btn-light btn-sm rounded-pill px-3">
                         <i class="bi bi-arrow-left me-1"></i>Negociador
                     </a>
-                    <a href="{% url 'lider_dashboard' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    <a href="{% url 'lider_dashboard' %}" class="btn btn-light btn-sm rounded-pill px-3">
                         <i class="bi bi-house me-1"></i>Dashboard
                     </a>
-                    <a href="/accounts/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    <a href="/accounts/logout" class="btn btn-light btn-sm rounded-pill px-3">
                         <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
                     </a>
                 </div>
@@ -40,8 +40,8 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);">
                             <div class="card-body p-4 text-center">
-                                <i class="bi bi-graph-up fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-90">Conversión de Ventas</h6>
+                                <i class="text-dark bi bi-graph-up fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">Conversión de Ventas</h6>
                                 <h3 class="fw-bold">{{ latest_indicator.conversion_de_ventas }}%</h3>
                             </div>
                         </div>
@@ -49,8 +49,8 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                             <div class="card-body p-4 text-center">
-                                <i class="bi bi-currency-dollar fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-90">Recaudación Mensual</h6>
+                                <i class="text-dark bi bi-currency-dollar fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">Recaudación Mensual</h6>
                                 <h3 class="fw-bold">${{ latest_indicator.recaudacion_mensual|floatformat:0 }}</h3>
                             </div>
                         </div>
@@ -58,8 +58,8 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);">
                             <div class="card-body p-4 text-center">
-                                <i class="bi bi-clock fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-90">Tiempo Hablando</h6>
+                                <i class="text-dark bi bi-clock fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">Tiempo Hablando</h6>
                                 <h3 class="fw-bold">{{ latest_indicator.tiempo_hablando }} hrs</h3>
                             </div>
                         </div>
@@ -67,8 +67,9 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                             <div class="card-body p-4 text-center">
-                                <i class="bi bi-target fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-90">% Cumplimiento Recaudo</h6>
+                                <i class="text-dark bi bi-currency-dollar fs-2 mb-3"></i>
+                                <i class="text-dark bi bi-target fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">% Cumplimiento Recaudo</h6>
                                 <h3 class="fw-bold">{{ latest_indicator.porcentajes_cumplimiento_recaudo }}%</h3>
                             </div>
                         </div>
@@ -76,8 +77,8 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
                             <div class="card-body p-4 text-center text-dark">
-                                <i class="bi bi-check-circle fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-75">% Cumplimiento Conversión</h6>
+                                <i class="text-dark bi bi-check-circle fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">% Cumplimiento Conversión</h6>
                                 <h3 class="fw-bold">{{ latest_indicator.porcentaje_cumplimiento_conversion }}%</h3>
                             </div>
                         </div>
@@ -85,8 +86,8 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="card border-0 shadow-sm bg-gradient text-white h-100" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
                             <div class="card-body p-4 text-center">
-                                <i class="bi bi-exclamation-triangle fs-2 mb-3"></i>
-                                <h6 class="card-title opacity-90">% Caídas de Acuerdos</h6>
+                                <i class="text-dark bi bi-exclamation-triangle fs-2 mb-3"></i>
+                                <h6 class="card-title text-dark opacity-90">% Caídas de Acuerdos</h6>
                                 <h3 class="fw-bold">{{ latest_indicator.porcentaje_caidas_acuerdos }}%</h3>
                             </div>
                         </div>

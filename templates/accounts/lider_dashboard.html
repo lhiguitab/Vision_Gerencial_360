@@ -3,8 +3,8 @@
 {% block content %}
 <div class="position-relative overflow-hidden p-3 p-md-5 text-center bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="col-md-8 p-lg-5 mx-auto my-5">
-        <h1 class="display-4 fw-bold text-white mb-3">Dashboard del Líder</h1>
-        <p class="lead fw-normal text-white-50 mb-4">Bienvenido, <span class="text-white fw-semibold">{{ user.first_name }} {{ user.last_name }}</span></p>
+        <h1 class="display-4 fw-bold text-dark mb-3">Dashboard del Líder</h1>
+        <p class="lead fw-normal text-dark-50 mb-4">Bienvenido, <span class="text-dark fw-semibold">{{ user.first_name }} {{ user.last_name }}</span></p>
         <div class="d-flex gap-3 justify-content-center">
             <a href="/accounts/logout" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">
                 <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
@@ -33,13 +33,13 @@
             </div>
         {% else %}
             <div class="col-lg-6">
-                <div class="card border-0 shadow-lg bg-gradient text-white h-100" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-4 text-center">
                         <div class="mb-3">
-                            <i class="bi bi-check-circle-fill fs-1"></i>
+                            <i class="bi bi-check-circle-fill fs-1 text-success"></i>
                         </div>
-                        <h4 class="fw-bold mb-2">¡Todo al día!</h4>
-                        <p class="mb-0 opacity-90">No hay evaluaciones pendientes</p>
+                        <h4 class="fw-bold text-dark mb-2">¡Todo al día!</h4>
+                        <p class="text-muted text-dark mb-0 opacity-90">No hay evaluaciones pendientes</p>
                     </div>
                 </div>
             </div>
