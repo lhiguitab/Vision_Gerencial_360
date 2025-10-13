@@ -26,17 +26,23 @@
             <h3>Última Evaluación</h3>
         </div>
         <div class="col-md-4 text-end">
+            <div class="d-inline-flex align-items-center gap-3">
             {% if negotiator.has_evaluations %}
-                <a href="{% url 'last_evaluation' cedula=negotiator.cedula %}" class="btn btn-info me-2">
-                    <i class="bi bi-eye"></i> Ver Detalles Completos
+                <a href="{% url 'last_evaluation' cedula=negotiator.cedula %}" class="btn btn-info btn-lift">
+                    <i class="bi bi-eye me-1"></i> Ver Detalles Completos
                 </a>
-                <a href="{% url 'exportar_evaluacion_pdf' cedula=negotiator.cedula %}" class="btn btn-outline-secondary me-2">
-                    <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success btn-lift">
+                    <i class="bi bi-graph-up me-1"></i> Indicadores Históricos
+                </a>
+                <a href="{% url 'exportar_evaluacion_pdf' cedula=negotiator.cedula %}" class="btn text-danger shadow btn-lift">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                </a>
+            {% else %}
+                <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success">
+                    <i class="bi bi-graph-up me-1"></i> Indicadores Históricos
                 </a>
             {% endif %}
-            <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success">
-                <i class="bi bi-graph-up"></i> Indicadores Históricos
-            </a>
+            </div>
         </div>
     </div>
 
@@ -121,3 +127,15 @@
     {% endif %}
 </div>
 {% endblock %}
+
+<style>
+/* Lift effect used by action buttons to create a consistent 'raised' hover */
+.btn-lift {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.btn-lift:hover, .btn-lift:focus {
+    transform: translateY(-6px);
+    box-shadow: 0 0.9rem 1.6rem rgba(0,0,0,0.18);
+}
+</style>
+
