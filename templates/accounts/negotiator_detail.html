@@ -96,13 +96,31 @@
         </a>
     </div>
 
-    <p class="mt-3"><strong>Puntaje Total (Hacer 70% + Ser 30%):</strong>
-        {% with total=negotiator.calcular_puntaje_total %}
-            {% if total %} <span class="badge bg-info">{{ total }}/100</span>
-            {% else %} <span class="text-muted">Sin datos suficientes</span>
-            {% endif %}
-        {% endwith %}
-    </p>
+    <!-- Puntaje total: tarjeta destacada -->
+    {% with total=negotiator.calcular_puntaje_total %}
+        <div class="card border-0 shadow-sm my-4">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="card-title mb-1">Puntaje Total</h5>
+                    <p class="mb-1 text-muted small">Composición: Hacer 70% + Ser 30%</p>
+                    {% if total %}
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="display-6 fw-bold">{{ total }}%</div>
+                            <div class="w-50">
+                                <label for="totalProgress" class="visually-hidden">Progreso del puntaje total</label>
+                                <progress id="totalProgress" class="progress w-100" value="{{ total }}" max="100" style="height:10px;" aria-valuetext="{{ total }}%"></progress>
+                            </div>
+                        </div>
+                    {% else %}
+                        <span class="text-muted">Sin datos suficientes</span>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">KPIs (Hacer) y evaluación del Ser combinados</small>
+                </div>
+            </div>
+        </div>
+    {% endwith %}
 
     <h3 class="mt-5">Historial de Evaluaciones</h3>
     {% if negotiator.evaluations.all %}
