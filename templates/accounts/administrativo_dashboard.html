@@ -6,7 +6,7 @@
         <h1 class="display-6 fw-bold">Dashboard Administrativo</h1>
         <p class="col-md-10">Bienvenido, {{ user.username }}. Gestión de resultados y KPIs por líder.</p>
         <div class="d-flex gap-2">
-            <a href="/accounts/logout" class="btn btn-outline-danger">Cerrar Sesión</a>
+            <a href="/accounts/logout" class="btn btn-danger shadow">Cerrar Sesión</a>
         </div>
     </div>
 </div>
@@ -105,4 +105,193 @@
     Actualiza los filtros para cambiar el semestre o el orden.
   </div>
 </div>
+<!-- Gráficos resumen para administradores -->
+<style>
+  /* Force consistent sizes for top charts */
+  .dashboard-chart .card-body{ height:360px; }
+  .dashboard-chart canvas{ width:100% !important; height:100% !important; }
+</style>
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card mb-3 dashboard-chart">
+      <div class="card-header">Participación de negociadores por líder (%)</div>
+      <div class="card-body">
+        <canvas id="chartShare"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3 dashboard-chart">
+      <div class="card-header">Conteo de negociadores por líder</div>
+      <div class="card-body">
+        <canvas id="chartCounts"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-12">
+    <div class="card mb-3 dashboard-chart">
+      <div class="card-header">Desempeño promedio por líder</div>
+      <div class="card-body">
+        <canvas id="chartDesempeno"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- KPI canvases grid -->
+<div class="row mt-4">
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Recaudo promedio</div><div class="card-body" style="height:180px"><canvas id="chartRecaudo"></canvas></div></div></div>
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Tiempo hablando</div><div class="card-body" style="height:180px"><canvas id="chartTiempo"></canvas></div></div></div>
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Conversión de ventas</div><div class="card-body" style="height:180px"><canvas id="chartConversion"></canvas></div></div></div>
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Cumpl. Recaudo</div><div class="card-body" style="height:180px"><canvas id="chartCumpRecaudo"></canvas></div></div></div>
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Cumpl. Conversión</div><div class="card-body" style="height:180px"><canvas id="chartCumpConv"></canvas></div></div></div>
+  <div class="col-md-4 mb-3"><div class="card"><div class="card-header">Caídas Acuerdos</div><div class="card-body" style="height:180px"><canvas id="chartCaidas"></canvas></div></div></div>
+</div>
+
+{% block extra_scripts %}
+<!-- Chart.js y plugin de datalabels desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const labels = {{ chart_labels|safe }};
+    const counts = {{ chart_counts|safe }};
+    const shares = {{ chart_shares|safe }};
+    const avgDesempeno = {{ chart_avg_desempeno|safe }};
+
+    // Doughnut chart: participation with percentage labels
+    const ctxShare = document.getElementById('chartShare').getContext('2d');
+    new Chart(ctxShare, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: shares,
+          backgroundColor: labels.map((_,i)=>`hsl(${(i*60)%360} 70% 55%)`),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {position: 'right'},
+          datalabels: {
+            color: '#fff',
+            formatter: (value) => value + '%',
+            font: {weight: '600'},
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) { return context.label + ': ' + context.parsed + '%'; }
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // Horizontal bar chart: counts per leader (refinado para conteos)
+    const ctxCounts = document.getElementById('chartCounts').getContext('2d');
+    new Chart(ctxCounts, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Negociadores',
+          data: counts,
+          backgroundColor: 'rgba(54, 162, 235, 0.95)',
+          borderRadius: 8,
+          barThickness: 28,
+          maxBarThickness: 40
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              callback: function(value){ return Number.isInteger(value) ? value : ''; }
+            },
+            grid: { drawOnChartArea: false }
+          },
+          y: { ticks: { autoSkip: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'right',
+            color: '#fff',
+            backgroundColor: 'rgba(0,0,0,0.28)',
+            borderRadius: 4,
+            padding: 6,
+            formatter: function(value){ return value; }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context){ return context.label + ': ' + context.parsed.x; }
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+
+    // Bar chart: avg desempeño con etiquetas
+    const ctxDes = document.getElementById('chartDesempeno').getContext('2d');
+    new Chart(ctxDes, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Desempeño promedio',
+          data: avgDesempeno,
+          backgroundColor: avgDesempeno.map(v=> v>=80 ? 'rgba(40,167,69,0.9)' : v>=60 ? 'rgba(255,193,7,0.95)' : 'rgba(220,53,69,0.95)')
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 100 } },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: '#000',
+            anchor: 'end',
+            align: 'start',
+            formatter: (value) => value
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+    
+    // === Additional KPI charts (uniform sizing) ===
+    const kpiCharts = [
+      {id: 'chartRecaudo', label: 'Recaudo promedio ($)', data: {{ chart_avg_recaudo|safe }}, suggestedMax: null},
+      {id: 'chartTiempo', label: 'Tiempo hablando (h)', data: {{ chart_avg_tiempo|safe }}, suggestedMax: null},
+      {id: 'chartConversion', label: 'Conv. Ventas (%)', data: {{ chart_avg_conversion|safe }}, suggestedMax: 100},
+      {id: 'chartCumpRecaudo', label: 'Cumpl. Recaudo (%)', data: {{ chart_avg_cump_recaudo|safe }}, suggestedMax: 100},
+      {id: 'chartCumpConv', label: 'Cumpl. Conversión (%)', data: {{ chart_avg_cump_conv|safe }}, suggestedMax: 100},
+      {id: 'chartCaidas', label: 'Caídas Acuerdos (%)', data: {{ chart_avg_caidas|safe }}, suggestedMax: 100}
+    ];
+
+    kpiCharts.forEach(cfg => {
+      const el = document.getElementById(cfg.id);
+      if(!el) return;
+      new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: cfg.label, data: cfg.data, backgroundColor: 'rgba(123, 97, 255, 0.85)' }] },
+        options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, suggestedMax: cfg.suggestedMax } }, plugins:{ legend:{display:false}, datalabels:{color:'#000', anchor:'end', align:'start', formatter: v=>v } } },
+        plugins:[ChartDataLabels]
+      });
+    });
+  });
+</script>
+{% endblock %}
+
 {% endblock %}

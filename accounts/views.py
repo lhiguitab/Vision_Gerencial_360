@@ -307,6 +307,18 @@ def administrativo_dashboard_view(request):
 
     context = {
         'leaders_data': leaders_data,
+        # Datos para gráficos: etiquetas, conteos y porcentaje de participación
+        'chart_labels': [l['nombre'] for l in leaders_data],
+        'chart_counts': [l['equipos'] for l in leaders_data],
+        'chart_shares': [],  # se calculará abajo
+        'chart_avg_desempeno': [l['desempeno'] if l['desempeno'] is not None else 0 for l in leaders_data],
+        # Promedios KPI adicionales para gráficos
+        'chart_avg_recaudo': [round(l['avg_recaudo'] or 0, 2) for l in leaders_data],
+        'chart_avg_tiempo': [round(l['avg_tiempo'] or 0, 2) for l in leaders_data],
+        'chart_avg_conversion': [round(l['avg_conversion'] or 0, 2) for l in leaders_data],
+        'chart_avg_cump_recaudo': [round(l['avg_cump_recaudo'] or 0, 2) for l in leaders_data],
+        'chart_avg_cump_conv': [round(l['avg_cump_conv'] or 0, 2) for l in leaders_data],
+        'chart_avg_caidas': [round(l['avg_caidas'] or 0, 2) for l in leaders_data],
         'anio': year,
         'semestre': semestre,
         'ordenar_por': ordenar_por,
@@ -314,6 +326,13 @@ def administrativo_dashboard_view(request):
         'start_date': start_date,
         'end_date': end_date,
     }
+    # Calcular participación relativa (porcentaje) respecto al total de negociadores
+    total_negociadores = sum([l['equipos'] for l in leaders_data]) or 0
+    if total_negociadores > 0:
+        context['chart_shares'] = [round(100.0 * l['equipos'] / total_negociadores, 2) for l in leaders_data]
+    else:
+        context['chart_shares'] = [0 for _ in leaders_data]
+
     return render(request, 'accounts/administrativo_dashboard.html', context)
 
 @login_required
