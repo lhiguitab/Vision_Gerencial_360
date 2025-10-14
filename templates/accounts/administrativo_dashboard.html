@@ -56,13 +56,14 @@
 </div>
 
 <div class="card">
-  <div class="card-header">Indicadores consolidados por líder</div>
+  <div class="card-header">Indicadores consolidados por líder y negociadores</div>
   <div class="card-body table-responsive">
     <table class="table table-striped align-middle">
       <thead>
         <tr>
-          <th>Líder</th>
-          <th>Correo</th>
+          <th style="width: 40px;"></th>
+          <th>Líder / Negociador</th>
+          <th>Correo / Cédula</th>
           <th>Negociadores</th>
           <th>Conv. Ventas (%)</th>
           <th>Cumpl. Recaudo (%)</th>
@@ -75,10 +76,17 @@
       </thead>
       <tbody>
         {% for l in leaders_data %}
-        <tr>
-          <td>{{ l.nombre }}</td>
+        <tr class="leader-row" style="background-color: #f8f9fa; font-weight: 500;">
+          <td>
+            {% if l.negociadores %}
+            <button class="btn btn-sm btn-outline-primary toggle-negotiators" data-leader="{{ l.cedula }}" type="button">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            {% endif %}
+          </td>
+          <td><strong>{{ l.nombre }}</strong></td>
           <td>{{ l.email }}</td>
-          <td>{{ l.equipos }}</td>
+          <td><span class="badge bg-info text-dark">{{ l.equipos }}</span></td>
           <td>{{ l.avg_conversion|floatformat:2 }}</td>
           <td>{{ l.avg_cump_recaudo|floatformat:2 }}</td>
           <td>{{ l.avg_cump_conv|floatformat:2 }}</td>
@@ -95,14 +103,39 @@
             {% endif %}
           </td>
         </tr>
+        {% for n in l.negociadores %}
+        <tr class="negotiator-row negotiator-{{ l.cedula }}" style="display: none;">
+          <td></td>
+          <td style="padding-left: 2.5rem;">
+            <i class="bi bi-person-fill text-secondary"></i> {{ n.nombre }}
+          </td>
+          <td class="text-muted">{{ n.cedula }}</td>
+          <td>-</td>
+          <td>{{ n.avg_conversion|floatformat:2|default:"-" }}</td>
+          <td>{{ n.avg_cump_recaudo|floatformat:2|default:"-" }}</td>
+          <td>{{ n.avg_cump_conv|floatformat:2|default:"-" }}</td>
+          <td>{{ n.avg_caidas|floatformat:2|default:"-" }}</td>
+          <td>{{ n.avg_tiempo|floatformat:2|default:"-" }}</td>
+          <td>{% if n.avg_recaudo %}${{ n.avg_recaudo|floatformat:0 }}{% else %}-{% endif %}</td>
+          <td>
+            {% if n.desempeno %}
+            <span class="badge {% if n.desempeno >= 80 %}bg-success{% elif n.desempeno >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+              {{ n.desempeno|floatformat:2 }}
+            </span>
+            {% else %}
+            <span class="text-muted">N/D</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
         {% empty %}
-        <tr><td colspan="10" class="text-center text-muted">Sin datos para el rango seleccionado.</td></tr>
+        <tr><td colspan="11" class="text-center text-muted">Sin datos para el rango seleccionado.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   <div class="card-footer text-muted">
-    Actualiza los filtros para cambiar el semestre o el orden.
+    Haz clic en el botón <i class="bi bi-chevron-down"></i> para ver los negociadores de cada líder.
   </div>
 </div>
 <!-- Gráficos resumen para administradores -->
@@ -153,6 +186,32 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
+    // Toggle negociadores
+    document.querySelectorAll('.toggle-negotiators').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const leaderCedula = this.getAttribute('data-leader');
+        const negotiatorRows = document.querySelectorAll('.negotiator-' + leaderCedula);
+        const icon = this.querySelector('i');
+        
+        negotiatorRows.forEach(row => {
+          if (row.style.display === 'none') {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Toggle icono
+        if (icon.classList.contains('bi-chevron-down')) {
+          icon.classList.remove('bi-chevron-down');
+          icon.classList.add('bi-chevron-up');
+        } else {
+          icon.classList.remove('bi-chevron-up');
+          icon.classList.add('bi-chevron-down');
+        }
+      });
+    });
+
     const labels = {{ chart_labels|safe }};
     const counts = {{ chart_counts|safe }};
     const shares = {{ chart_shares|safe }};

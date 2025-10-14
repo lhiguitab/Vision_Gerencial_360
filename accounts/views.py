@@ -285,6 +285,55 @@ def administrativo_dashboard_view(request):
         if row['avg_caidas'] is not None:
             desempeno_componentes.append(max(0.0, 100.0 - row['avg_caidas']))
         desempeno = round(sum(desempeno_componentes) / len(desempeno_componentes), 2) if desempeno_componentes else None
+        
+        # Obtener negociadores del líder con sus KPIs en el rango
+        leader_cedula = row['negotiator__leader__cedula']
+        negociadores_kpis = (
+            NegotiatorIndicator.objects
+            .filter(
+                negotiator__leader__cedula=leader_cedula,
+                date__gte=start_date, 
+                date__lte=end_date
+            )
+            .values(
+                'negotiator__cedula',
+                'negotiator__name'
+            )
+            .annotate(
+                avg_conversion=Avg('conversion_de_ventas'),
+                avg_recaudo=Avg('recaudacion_mensual'),
+                avg_tiempo=Avg('tiempo_hablando'),
+                avg_cump_recaudo=Avg('porcentajes_cumplimiento_recaudo'),
+                avg_cump_conv=Avg('porcentaje_cumplimiento_conversion'),
+                avg_caidas=Avg('porcentaje_caidas_acuerdos'),
+            )
+        )
+        
+        negociadores_list = []
+        for neg in negociadores_kpis:
+            neg_desempeno_componentes = []
+            if neg['avg_conversion'] is not None:
+                neg_desempeno_componentes.append(neg['avg_conversion'])
+            if neg['avg_cump_recaudo'] is not None:
+                neg_desempeno_componentes.append(neg['avg_cump_recaudo'])
+            if neg['avg_cump_conv'] is not None:
+                neg_desempeno_componentes.append(neg['avg_cump_conv'])
+            if neg['avg_caidas'] is not None:
+                neg_desempeno_componentes.append(max(0.0, 100.0 - neg['avg_caidas']))
+            neg_desempeno = round(sum(neg_desempeno_componentes) / len(neg_desempeno_componentes), 2) if neg_desempeno_componentes else None
+            
+            negociadores_list.append({
+                'cedula': neg['negotiator__cedula'],
+                'nombre': neg['negotiator__name'],
+                'avg_conversion': neg['avg_conversion'],
+                'avg_recaudo': neg['avg_recaudo'],
+                'avg_tiempo': neg['avg_tiempo'],
+                'avg_cump_recaudo': neg['avg_cump_recaudo'],
+                'avg_cump_conv': neg['avg_cump_conv'],
+                'avg_caidas': neg['avg_caidas'],
+                'desempeno': neg_desempeno,
+            })
+        
         leaders_data.append({
             'cedula': row['negotiator__leader__cedula'],
             'nombre': f"{row['negotiator__leader__first_name']} {row['negotiator__leader__last_name']}",
@@ -297,6 +346,7 @@ def administrativo_dashboard_view(request):
             'avg_cump_conv': row['avg_cump_conv'],
             'avg_caidas': row['avg_caidas'],
             'desempeno': desempeno,
+            'negociadores': negociadores_list,
         })
 
     # Ordenamiento
