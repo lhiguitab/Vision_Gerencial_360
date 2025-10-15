@@ -15,4 +15,5 @@ urlpatterns = [
     path('negotiator/<str:cedula>/indicators/api/', views.negotiator_indicators_api, name='negotiator_indicators_api'),
     path('negotiator/<str:cedula>/start-ser-evaluation/', views.start_ser_evaluation_view, name='start_ser_evaluation'),
     path('negotiator/<str:cedula>/exportar-evaluacion-pdf/', views.exportar_evaluacion_pdf, name='exportar_evaluacion_pdf'),
+    path('negotiator/<str:cedula>/generar-sugerencia/', views.generar_sugerencia_view, name='generar_sugerencia'),
 ]

@@ -4,3 +4,5 @@ cryptography
 Faker
 openpyxl
 reportlab
+openai
+python-dotenv

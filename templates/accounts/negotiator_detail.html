@@ -37,6 +37,16 @@
                 <a href="{% url 'exportar_evaluacion_pdf' cedula=negotiator.cedula %}" class="btn text-danger shadow btn-lift">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
                 </a>
+                {# Botón para generar sugerencia mediante IA #}
+                {% if negotiator.calcular_puntaje_total %}
+                    <a href="{% url 'generar_sugerencia' cedula=negotiator.cedula %}" class="btn btn-outline-primary btn-lift">
+                        <i class="bi bi-magic me-1"></i> Generar Sugerencia (IA)
+                    </a>
+                {% else %}
+                    <button class="btn btn-outline-primary btn-lift" disabled>
+                        <i class="bi bi-magic me-1"></i> Generar Sugerencia (IA)
+                    </button>
+                {% endif %}
             {% else %}
                 <a href="{% url 'negotiator_indicators' cedula=negotiator.cedula %}" class="btn btn-success">
                     <i class="bi bi-graph-up me-1"></i> Indicadores Históricos
