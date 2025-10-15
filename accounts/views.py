@@ -2,8 +2,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponse  
 from .forms import SerEvaluationForm
 from .models import SerEvaluation, Negotiator
+import os
+import openai
+
 
 @login_required
 def start_ser_evaluation_view(request, cedula):
@@ -590,3 +594,86 @@ def negotiator_detail_view(request, cedula):
         'last_evaluation': last_evaluation
     }
     return render(request, 'accounts/negotiator_detail.html', context)
+
+@login_required
+def generar_sugerencia_view(request, cedula):
+    """
+    Genera una sugerencia de felicitaciones o compromisos para un negociador basándose en
+    su puntaje total. Utiliza la API de OpenAI para crear un mensaje corto en español.
+    """
+
+    # Solo líderes pueden generar sugerencias
+    if request.user.role != 'lider':
+        return redirect('profile')
+
+    negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
+    total_score = negotiator.calcular_puntaje_total()
+    if total_score is None:
+        messages.warning(request, 'No hay información suficiente para generar la sugerencia.')
+        return redirect('negotiator_detail', cedula=cedula)
+
+    # Umbral de 75 % para definir felicitaciones o compromisos
+    threshold = 75.0
+    if total_score >= threshold:
+        instruction = (
+            f"Genera un mensaje de felicitaciones breve y motivador (3-4 frases) para un negociador "
+            f"que ha obtenido un puntaje de {total_score:.1f}% en la última evaluación de desempeño. "
+            "Resalta sus logros y anima a seguir en el mismo camino. No incluyas información del sistema ni nombres internos."
+        )
+    else:
+        instruction = (
+            f"Genera un mensaje de compromisos y recomendaciones (3-4 frases) para un negociador "
+            f"que ha obtenido un puntaje de {total_score:.1f}% en la última evaluación de desempeño. "
+            "Menciona amablemente áreas de mejora y compromisos concretos para elevar su desempeño en próximas evaluaciones. "
+            "No incluyas información del sistema ni nombres internos."
+        )
+
+    # Llamada a la API de OpenAI
+    suggestion = None
+    error_msg = None
+    if openai is None:
+        error_msg = 'La biblioteca openai no está instalada. Añádela a requirements.txt e instálala.'
+    else:
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            error_msg = 'La clave OPENAI_API_KEY no está configurada en las variables de entorno.'
+        else:
+            try:
+                # API nueva (≥1.0.0)
+                client = openai.OpenAI(api_key=api_key)
+                response = client.chat.completions.create(
+                    model='gpt-3.5-turbo',
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Eres un asistente que genera retroalimentación breve y concisa "
+                                "para la evaluación de desempeño de un negociador en español. "
+                                "Procura ser claro y constructivo."
+                            ),
+                        },
+                        {"role": "user", "content": instruction},
+                    ],
+                    max_tokens=250,
+                    temperature=0.7,
+                )
+                suggestion = response.choices[0].message.content.strip()
+            except Exception as e:
+                error_msg = f'No se pudo generar la sugerencia: {e}'
+
+    # Manejo de errores
+    if error_msg:
+        messages.error(request, error_msg)
+        return redirect('negotiator_detail', cedula=cedula)
+
+    # Crear archivo de texto con la sugerencia
+    from io import BytesIO
+    buffer = BytesIO()
+    buffer.write(suggestion.encode('utf-8'))
+    buffer.seek(0)
+    filename = f'sugerencia_{negotiator.cedula}.txt'
+    response = HttpResponse(buffer.getvalue(), content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
