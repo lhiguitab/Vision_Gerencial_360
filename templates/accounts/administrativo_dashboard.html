@@ -15,6 +15,14 @@
   <div class="card-body">
     <form class="row g-3" method="get">
       <div class="col-auto">
+        <label class="form-label">Desde</label>
+        <input type="date" class="form-control" name="desde" value="{{ desde }}" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Hasta</label>
+        <input type="date" class="form-control" name="hasta" value="{{ hasta }}" />
+      </div>
+      <div class="col-auto">
         <label class="form-label">Año</label>
         <input type="number" class="form-control" name="anio" value="{{ anio }}" min="2020" max="2100" />
       </div>
@@ -50,9 +58,64 @@
           <i class="bi bi-file-earmark-excel"></i> Exportar Excel
         </a>
       </div>
+      <div class="col-auto align-self-end">
+        <a class="btn btn-outline-secondary" href="{% url 'historico_evaluaciones' %}">
+          <i class="bi bi-clock-history"></i> Histórico de Evaluaciones
+        </a>
+      </div>
     </form>
-    <small class="text-muted">Rango: {{ start_date }} a {{ end_date }}</small>
+    <small class="text-muted">Rango: {{ start_date }} a {{ end_date }}. Si se indican fechas, se ignora año/semestre.</small>
   </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">Gráfico comparativo de desempeño por líder</div>
+  <div class="card-body">
+    <canvas id="leadersChart" height="90"></canvas>
+  </div>
+  <div class="card-footer text-muted">
+    Ordenado de mayor a menor según el filtro seleccionado.
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function() {
+      const labels = [
+        {% for l in leaders_data %}'{{ l.nombre|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %}
+      ];
+      const dataVals = [
+        {% for l in leaders_data %}{{ l.desempeno|default:0|floatformat:2 }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      ];
+      const ctx = document.getElementById('leadersChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Desempeño (0-100)',
+            data: dataVals,
+            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { stepSize: 10 }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    })();
+  </script>
 </div>
 
 <div class="card">

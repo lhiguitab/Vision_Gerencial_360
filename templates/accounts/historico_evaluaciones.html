@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-4 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-2">
+        <h1 class="display-6 fw-bold">Histórico de Evaluaciones</h1>
+        <p class="col-md-10">Filtra por fechas, líderes o negociadores y exporta a Excel o PDF.</p>
+        <div class="d-flex gap-2">
+            <a href="{% url 'administrativo_dashboard' %}" class="btn btn-outline-secondary">Volver al Dashboard</a>
+            <a href="/accounts/logout" class="btn btn-outline-danger">Cerrar Sesión</a>
+        </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form class="row g-3" method="get">
+        <div class="col-auto">
+          <label class="form-label">Desde</label>
+          <input type="date" class="form-control" name="desde" value="{{ desde }}" />
+        </div>
+        <div class="col-auto">
+          <label class="form-label">Hasta</label>
+          <input type="date" class="form-control" name="hasta" value="{{ hasta }}" />
+        </div>
+        <div class="col-auto">
+          <label class="form-label">Líder</label>
+          <select class="form-select" name="lider">
+            <option value="">Todos</option>
+            {% for l in leaders %}
+              <option value="{{ l.cedula }}" {% if l.cedula == lider_selected %}selected{% endif %}>{{ l.first_name }} {{ l.last_name }} ({{ l.email }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label">Negociador</label>
+          <select class="form-select" name="negociador">
+            <option value="">Todos</option>
+            {% for n in negotiators %}
+              <option value="{{ n.cedula }}" {% if n.cedula == negociador_selected %}selected{% endif %}>{{ n.name }} ({{ n.cedula }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto align-self-end">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+        </div>
+        <div class="col-auto align-self-end">
+          <a class="btn btn-success" href="{% url 'exportar_historico_excel' %}?desde={{ desde }}&hasta={{ hasta }}&lider={{ lider_selected }}&negociador={{ negociador_selected }}">
+            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+          </a>
+        </div>
+        <div class="col-auto align-self-end">
+          <a class="btn btn-warning" href="{% url 'exportar_historico_pdf' %}?desde={{ desde }}&hasta={{ hasta }}&lider={{ lider_selected }}&negociador={{ negociador_selected }}">
+            <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+          </a>
+        </div>
+      </form>
+      <small class="text-muted">Rango aplicado: {% if desde %}{{ desde }}{% else %}N/D{% endif %} a {% if hasta %}{{ hasta }}{% else %}N/D{% endif %}</small>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">Estadísticas Generales</div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="mb-2 text-muted">Total Evaluaciones Hacer</div>
+              <div class="display-6">{{ count_hacer }}</div>
+            </div>
+            <div class="col-6">
+              <div class="mb-2 text-muted">Promedio Hacer</div>
+              <div class="display-6">{% if avg_hacer %}{{ avg_hacer|floatformat:2 }}{% else %}N/D{% endif %}</div>
+            </div>
+          </div>
+          <hr/>
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="mb-2 text-muted">Total Evaluaciones Ser</div>
+              <div class="display-6">{{ count_ser }}</div>
+            </div>
+            <div class="col-6">
+              <div class="mb-2 text-muted">Promedio Ser</div>
+              <div class="display-6">{% if avg_ser %}{{ avg_ser|floatformat:2 }}{% else %}N/D{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header">Evaluaciones Hacer</div>
+    <div class="card-body table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Líder</th>
+            <th>Negociador</th>
+            <th>Hacer (0-100)</th>
+            <th>Feedback</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in evals %}
+          <tr>
+            <td>{{ e.date|date:'Y-m-d H:i' }}</td>
+            <td>{{ e.evaluator.first_name }} {{ e.evaluator.last_name }} ({{ e.evaluator.email }})</td>
+            <td>{{ e.negotiator.name }} ({{ e.negotiator.cedula }})</td>
+            <td>{{ e.overall_score|floatformat:2 }}</td>
+            <td>{{ e.feedback|default:'-' }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted">No hay evaluaciones para el filtro seleccionado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header">Evaluaciones Ser</div>
+    <div class="card-body table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Líder</th>
+            <th>Negociador</th>
+            <th>Actitud</th>
+            <th>Trabajo en Equipo</th>
+            <th>Sentido de Pertenencia</th>
+            <th>Relacionamiento</th>
+            <th>Compromiso</th>
+            <th>Promedio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in ser_evals %}
+          <tr>
+            <td>{{ s.date|date:'Y-m-d H:i' }}</td>
+            <td>{{ s.evaluator.first_name }} {{ s.evaluator.last_name }} ({{ s.evaluator.email }})</td>
+            <td>{{ s.negotiator.name }} ({{ s.negotiator.cedula }})</td>
+            <td>{{ s.actitud }}</td>
+            <td>{{ s.trabajo_en_equipo }}</td>
+            <td>{{ s.sentido_pertenencia }}</td>
+            <td>{{ s.relacionamiento }}</td>
+            <td>{{ s.compromiso }}</td>
+            <td>{{ s.promedio|floatformat:2 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted">No hay evaluaciones del Ser para el filtro seleccionado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+

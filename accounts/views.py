@@ -2,12 +2,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse  
 from .forms import SerEvaluationForm
 from .models import SerEvaluation, Negotiator
-import os
-import openai
-
 
 @login_required
 def start_ser_evaluation_view(request, cedula):
@@ -239,22 +235,54 @@ def administrativo_dashboard_view(request):
     if request.user.role != 'administrativo' and not request.user.is_superuser:
         return redirect('profile')
 
-    # Parámetros de filtro: año y semestre
-    try:
-        year = int(request.GET.get('anio') or timezone.now().year)
-    except ValueError:
-        year = timezone.now().year
-    semestre = request.GET.get('semestre') or '1'
-    if semestre not in ['1', '2']:
-        semestre = '1'
+    # Parámetros de filtro: rango personalizado (desde/hasta) o año/semestre
+    desde_str = request.GET.get('desde')
+    hasta_str = request.GET.get('hasta')
+    year = None
+    semestre = None
+    start_date = None
+    end_date = None
 
-    # Rango de fechas por semestre
-    if semestre == '1':
-        start_date = datetime(year, 1, 1).date()
-        end_date = datetime(year, 6, 30).date()
+    # Si vienen fechas explícitas, tienen prioridad
+    if desde_str or hasta_str:
+        try:
+            if desde_str:
+                start_date = datetime.strptime(desde_str, '%Y-%m-%d').date()
+            if hasta_str:
+                end_date = datetime.strptime(hasta_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = None
+            end_date = None
+
+        # Defaults si falta alguno
+        if start_date is None:
+            start_date = timezone.now().date() - timedelta(days=180)
+        if end_date is None:
+            end_date = timezone.now().date()
+
+        # Asegurar orden correcto
+        if end_date < start_date:
+            start_date, end_date = end_date, start_date
+
+        # Set valores mostrados en formulario auxiliar
+        year = start_date.year
+        semestre = '1' if start_date.month <= 6 else '2'
     else:
-        start_date = datetime(year, 7, 1).date()
-        end_date = datetime(year, 12, 31).date()
+        # Filtro por año/semestre (por defecto)
+        try:
+            year = int(request.GET.get('anio') or timezone.now().year)
+        except ValueError:
+            year = timezone.now().year
+        semestre = request.GET.get('semestre') or '1'
+        if semestre not in ['1', '2']:
+            semestre = '1'
+
+        if semestre == '1':
+            start_date = datetime(year, 1, 1).date()
+            end_date = datetime(year, 6, 30).date()
+        else:
+            start_date = datetime(year, 7, 1).date()
+            end_date = datetime(year, 12, 31).date()
 
     # Consolidar KPIs por líder en el rango
     qs = (
@@ -289,55 +317,6 @@ def administrativo_dashboard_view(request):
         if row['avg_caidas'] is not None:
             desempeno_componentes.append(max(0.0, 100.0 - row['avg_caidas']))
         desempeno = round(sum(desempeno_componentes) / len(desempeno_componentes), 2) if desempeno_componentes else None
-        
-        # Obtener negociadores del líder con sus KPIs en el rango
-        leader_cedula = row['negotiator__leader__cedula']
-        negociadores_kpis = (
-            NegotiatorIndicator.objects
-            .filter(
-                negotiator__leader__cedula=leader_cedula,
-                date__gte=start_date, 
-                date__lte=end_date
-            )
-            .values(
-                'negotiator__cedula',
-                'negotiator__name'
-            )
-            .annotate(
-                avg_conversion=Avg('conversion_de_ventas'),
-                avg_recaudo=Avg('recaudacion_mensual'),
-                avg_tiempo=Avg('tiempo_hablando'),
-                avg_cump_recaudo=Avg('porcentajes_cumplimiento_recaudo'),
-                avg_cump_conv=Avg('porcentaje_cumplimiento_conversion'),
-                avg_caidas=Avg('porcentaje_caidas_acuerdos'),
-            )
-        )
-        
-        negociadores_list = []
-        for neg in negociadores_kpis:
-            neg_desempeno_componentes = []
-            if neg['avg_conversion'] is not None:
-                neg_desempeno_componentes.append(neg['avg_conversion'])
-            if neg['avg_cump_recaudo'] is not None:
-                neg_desempeno_componentes.append(neg['avg_cump_recaudo'])
-            if neg['avg_cump_conv'] is not None:
-                neg_desempeno_componentes.append(neg['avg_cump_conv'])
-            if neg['avg_caidas'] is not None:
-                neg_desempeno_componentes.append(max(0.0, 100.0 - neg['avg_caidas']))
-            neg_desempeno = round(sum(neg_desempeno_componentes) / len(neg_desempeno_componentes), 2) if neg_desempeno_componentes else None
-            
-            negociadores_list.append({
-                'cedula': neg['negotiator__cedula'],
-                'nombre': neg['negotiator__name'],
-                'avg_conversion': neg['avg_conversion'],
-                'avg_recaudo': neg['avg_recaudo'],
-                'avg_tiempo': neg['avg_tiempo'],
-                'avg_cump_recaudo': neg['avg_cump_recaudo'],
-                'avg_cump_conv': neg['avg_cump_conv'],
-                'avg_caidas': neg['avg_caidas'],
-                'desempeno': neg_desempeno,
-            })
-        
         leaders_data.append({
             'cedula': row['negotiator__leader__cedula'],
             'nombre': f"{row['negotiator__leader__first_name']} {row['negotiator__leader__last_name']}",
@@ -350,7 +329,6 @@ def administrativo_dashboard_view(request):
             'avg_cump_conv': row['avg_cump_conv'],
             'avg_caidas': row['avg_caidas'],
             'desempeno': desempeno,
-            'negociadores': negociadores_list,
         })
 
     # Ordenamiento
@@ -361,32 +339,15 @@ def administrativo_dashboard_view(request):
 
     context = {
         'leaders_data': leaders_data,
-        # Datos para gráficos: etiquetas, conteos y porcentaje de participación
-        'chart_labels': [l['nombre'] for l in leaders_data],
-        'chart_counts': [l['equipos'] for l in leaders_data],
-        'chart_shares': [],  # se calculará abajo
-        'chart_avg_desempeno': [l['desempeno'] if l['desempeno'] is not None else 0 for l in leaders_data],
-        # Promedios KPI adicionales para gráficos
-        'chart_avg_recaudo': [round(l['avg_recaudo'] or 0, 2) for l in leaders_data],
-        'chart_avg_tiempo': [round(l['avg_tiempo'] or 0, 2) for l in leaders_data],
-        'chart_avg_conversion': [round(l['avg_conversion'] or 0, 2) for l in leaders_data],
-        'chart_avg_cump_recaudo': [round(l['avg_cump_recaudo'] or 0, 2) for l in leaders_data],
-        'chart_avg_cump_conv': [round(l['avg_cump_conv'] or 0, 2) for l in leaders_data],
-        'chart_avg_caidas': [round(l['avg_caidas'] or 0, 2) for l in leaders_data],
         'anio': year,
         'semestre': semestre,
         'ordenar_por': ordenar_por,
         'direccion': direccion,
         'start_date': start_date,
         'end_date': end_date,
+        'desde': start_date.strftime('%Y-%m-%d') if start_date else None,
+        'hasta': end_date.strftime('%Y-%m-%d') if end_date else None,
     }
-    # Calcular participación relativa (porcentaje) respecto al total de negociadores
-    total_negociadores = sum([l['equipos'] for l in leaders_data]) or 0
-    if total_negociadores > 0:
-        context['chart_shares'] = [round(100.0 * l['equipos'] / total_negociadores, 2) for l in leaders_data]
-    else:
-        context['chart_shares'] = [0 for _ in leaders_data]
-
     return render(request, 'accounts/administrativo_dashboard.html', context)
 
 @login_required
@@ -595,85 +556,274 @@ def negotiator_detail_view(request, cedula):
     }
     return render(request, 'accounts/negotiator_detail.html', context)
 
-@login_required
-def generar_sugerencia_view(request, cedula):
-    """
-    Genera una sugerencia de felicitaciones o compromisos para un negociador basándose en
-    su puntaje total. Utiliza la API de OpenAI para crear un mensaje corto en español.
-    """
 
-    # Solo líderes pueden generar sugerencias
-    if request.user.role != 'lider':
+# ============================
+# Histórico de Evaluaciones
+# ============================
+from django.contrib.auth import get_user_model
+
+
+@login_required
+def historico_evaluaciones_view(request):
+    if request.user.role != 'administrativo' and not request.user.is_superuser:
         return redirect('profile')
 
-    negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
-    total_score = negotiator.calcular_puntaje_total()
-    if total_score is None:
-        messages.warning(request, 'No hay información suficiente para generar la sugerencia.')
-        return redirect('negotiator_detail', cedula=cedula)
+    # Filtros
+    desde_str = request.GET.get('desde')
+    hasta_str = request.GET.get('hasta')
+    lider_cedula = request.GET.get('lider')
+    negociador_cedula = request.GET.get('negociador')
 
-    # Umbral de 75 % para definir felicitaciones o compromisos
-    threshold = 75.0
-    if total_score >= threshold:
-        instruction = (
-            f"Genera un mensaje de felicitaciones breve y motivador (3-4 frases) para un negociador "
-            f"que ha obtenido un puntaje de {total_score:.1f}% en la última evaluación de desempeño. "
-            "Resalta sus logros y anima a seguir en el mismo camino. No incluyas información del sistema ni nombres internos."
-        )
-    else:
-        instruction = (
-            f"Genera un mensaje de compromisos y recomendaciones (3-4 frases) para un negociador "
-            f"que ha obtenido un puntaje de {total_score:.1f}% en la última evaluación de desempeño. "
-            "Menciona amablemente áreas de mejora y compromisos concretos para elevar su desempeño en próximas evaluaciones. "
-            "No incluyas información del sistema ni nombres internos."
-        )
+    try:
+        desde = datetime.strptime(desde_str, '%Y-%m-%d').date() if desde_str else None
+    except ValueError:
+        desde = None
+    try:
+        hasta = datetime.strptime(hasta_str, '%Y-%m-%d').date() if hasta_str else None
+    except ValueError:
+        hasta = None
+    if desde and hasta and hasta < desde:
+        desde, hasta = hasta, desde
 
-    # Llamada a la API de OpenAI
-    suggestion = None
-    error_msg = None
-    if openai is None:
-        error_msg = 'La biblioteca openai no está instalada. Añádela a requirements.txt e instálala.'
-    else:
-        api_key = os.environ.get('OPENAI_API_KEY')
-        if not api_key:
-            error_msg = 'La clave OPENAI_API_KEY no está configurada en las variables de entorno.'
-        else:
-            try:
-                # API nueva (≥1.0.0)
-                client = openai.OpenAI(api_key=api_key)
-                response = client.chat.completions.create(
-                    model='gpt-3.5-turbo',
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "Eres un asistente que genera retroalimentación breve y concisa "
-                                "para la evaluación de desempeño de un negociador en español. "
-                                "Procura ser claro y constructivo."
-                            ),
-                        },
-                        {"role": "user", "content": instruction},
-                    ],
-                    max_tokens=250,
-                    temperature=0.7,
-                )
-                suggestion = response.choices[0].message.content.strip()
-            except Exception as e:
-                error_msg = f'No se pudo generar la sugerencia: {e}'
+    evals = Evaluation.objects.select_related('negotiator', 'evaluator').all()
+    ser_evals = SerEvaluation.objects.select_related('negotiator', 'evaluator').all()
 
-    # Manejo de errores
-    if error_msg:
-        messages.error(request, error_msg)
-        return redirect('negotiator_detail', cedula=cedula)
+    if desde:
+        evals = evals.filter(date__date__gte=desde)
+        ser_evals = ser_evals.filter(date__date__gte=desde)
+    if hasta:
+        evals = evals.filter(date__date__lte=hasta)
+        ser_evals = ser_evals.filter(date__date__lte=hasta)
+    if lider_cedula:
+        evals = evals.filter(evaluator__cedula=lider_cedula)
+        ser_evals = ser_evals.filter(evaluator__cedula=lider_cedula)
+    if negociador_cedula:
+        evals = evals.filter(negotiator__cedula=negociador_cedula)
+        ser_evals = ser_evals.filter(negotiator__cedula=negociador_cedula)
 
-    # Crear archivo de texto con la sugerencia
+    # Listas auxiliares para selects
+    User = get_user_model()
+    leaders = User.objects.filter(role='lider').order_by('first_name', 'last_name').values('cedula', 'first_name', 'last_name', 'email')
+    negotiators = Negotiator.objects.order_by('name').values('cedula', 'name')
+
+    # Estadísticas generales
+    from django.db.models import Avg
+    avg_hacer = evals.aggregate(avg=Avg('overall_score'))['avg']
+    # promedio SER calculado en Python para no complicar el ORM con anotaciones
+    ser_proms = [se.promedio for se in ser_evals]
+    avg_ser = round(sum(ser_proms) / len(ser_proms), 2) if ser_proms else None
+
+    context = {
+        'evals': evals.order_by('-date'),
+        'ser_evals': ser_evals.order_by('-date'),
+        'leaders': list(leaders),
+        'negotiators': list(negotiators),
+        'desde': desde.strftime('%Y-%m-%d') if desde else '',
+        'hasta': hasta.strftime('%Y-%m-%d') if hasta else '',
+        'lider_selected': lider_cedula or '',
+        'negociador_selected': negociador_cedula or '',
+        'avg_hacer': _round(avg_hacer) if avg_hacer is not None else None,
+        'avg_ser': _round(avg_ser) if avg_ser is not None else None,
+        'count_hacer': evals.count(),
+        'count_ser': ser_evals.count(),
+    }
+    return render(request, 'accounts/historico_evaluaciones.html', context)
+
+
+@login_required
+def exportar_historico_excel(request):
+    if request.user.role != 'administrativo' and not request.user.is_superuser:
+        return redirect('profile')
+
+    desde_str = request.GET.get('desde')
+    hasta_str = request.GET.get('hasta')
+    lider_cedula = request.GET.get('lider')
+    negociador_cedula = request.GET.get('negociador')
+
+    try:
+        desde = datetime.strptime(desde_str, '%Y-%m-%d').date() if desde_str else None
+    except ValueError:
+        desde = None
+    try:
+        hasta = datetime.strptime(hasta_str, '%Y-%m-%d').date() if hasta_str else None
+    except ValueError:
+        hasta = None
+    if desde and hasta and hasta < desde:
+        desde, hasta = hasta, desde
+
+    evals = Evaluation.objects.select_related('negotiator', 'evaluator').all()
+    ser_evals = SerEvaluation.objects.select_related('negotiator', 'evaluator').all()
+
+    if desde:
+        evals = evals.filter(date__date__gte=desde)
+        ser_evals = ser_evals.filter(date__date__gte=desde)
+    if hasta:
+        evals = evals.filter(date__date__lte=hasta)
+        ser_evals = ser_evals.filter(date__date__lte=hasta)
+    if lider_cedula:
+        evals = evals.filter(evaluator__cedula=lider_cedula)
+        ser_evals = ser_evals.filter(evaluator__cedula=lider_cedula)
+    if negociador_cedula:
+        evals = evals.filter(negotiator__cedula=negociador_cedula)
+        ser_evals = ser_evals.filter(negotiator__cedula=negociador_cedula)
+
+    try:
+        import openpyxl
+    except Exception:
+        return HttpResponse('Falta dependencia openpyxl. Instálala e inténtalo de nuevo.', status=500)
+
+    wb = openpyxl.Workbook()
+    # Hoja Hacer
+    ws1 = wb.active
+    ws1.title = 'Evaluaciones Hacer'
+    ws1.append(['Fecha', 'Líder', 'Correo Líder', 'Negociador', 'Cédula Negociador', 'Puntaje Hacer (0-100)', 'Feedback'])
+    for e in evals.order_by('-date'):
+        ws1.append([
+            e.date.strftime('%Y-%m-%d %H:%M'),
+            f'{e.evaluator.first_name} {e.evaluator.last_name}',
+            e.evaluator.email,
+            e.negotiator.name,
+            e.negotiator.cedula,
+            _round(e.overall_score),
+            e.feedback or ''
+        ])
+
+    # Hoja Ser
+    ws2 = wb.create_sheet('Evaluaciones Ser')
+    ws2.append(['Fecha', 'Líder', 'Correo Líder', 'Negociador', 'Cédula Negociador', 'Actitud', 'Trabajo en Equipo', 'Sentido de Pertenencia', 'Relacionamiento', 'Compromiso', 'Promedio (1-5)'])
+    for s in ser_evals.order_by('-date'):
+        ws2.append([
+            s.date.strftime('%Y-%m-%d %H:%M'),
+            f'{s.evaluator.first_name} {s.evaluator.last_name}',
+            s.evaluator.email,
+            s.negotiator.name,
+            s.negotiator.cedula,
+            s.actitud,
+            s.trabajo_en_equipo,
+            s.sentido_pertenencia,
+            s.relacionamiento,
+            s.compromiso,
+            s.promedio,
+        ])
+
     from io import BytesIO
     buffer = BytesIO()
-    buffer.write(suggestion.encode('utf-8'))
+    wb.save(buffer)
     buffer.seek(0)
-    filename = f'sugerencia_{negotiator.cedula}.txt'
-    response = HttpResponse(buffer.getvalue(), content_type='text/plain')
+    filename = 'historico_evaluaciones.xlsx'
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
 
+@login_required
+def exportar_historico_pdf(request):
+    if request.user.role != 'administrativo' and not request.user.is_superuser:
+        return redirect('profile')
+
+    desde_str = request.GET.get('desde')
+    hasta_str = request.GET.get('hasta')
+    lider_cedula = request.GET.get('lider')
+    negociador_cedula = request.GET.get('negociador')
+
+    try:
+        desde = datetime.strptime(desde_str, '%Y-%m-%d').date() if desde_str else None
+    except ValueError:
+        desde = None
+    try:
+        hasta = datetime.strptime(hasta_str, '%Y-%m-%d').date() if hasta_str else None
+    except ValueError:
+        hasta = None
+    if desde and hasta and hasta < desde:
+        desde, hasta = hasta, desde
+
+    evals = Evaluation.objects.select_related('negotiator', 'evaluator').all()
+    ser_evals = SerEvaluation.objects.select_related('negotiator', 'evaluator').all()
+
+    if desde:
+        evals = evals.filter(date__date__gte=desde)
+        ser_evals = ser_evals.filter(date__date__gte=desde)
+    if hasta:
+        evals = evals.filter(date__date__lte=hasta)
+        ser_evals = ser_evals.filter(date__date__lte=hasta)
+    if lider_cedula:
+        evals = evals.filter(evaluator__cedula=lider_cedula)
+        ser_evals = ser_evals.filter(evaluator__cedula=lider_cedula)
+    if negociador_cedula:
+        evals = evals.filter(negotiator__cedula=negociador_cedula)
+        ser_evals = ser_evals.filter(negotiator__cedula=negociador_cedula)
+
+    # PDF
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from reportlab.lib.units import cm
+    except Exception:
+        return HttpResponse('Falta dependencia reportlab. Instálala e inténtalo de nuevo.', status=500)
+
+    from io import BytesIO
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Título
+    title = 'Histórico de Evaluaciones'
+    subt = []
+    if desde:
+        subt.append(f'Desde: {desde.strftime("%Y-%m-%d")}')
+    if hasta:
+        subt.append(f'Hasta: {hasta.strftime("%Y-%m-%d")}')
+    story.append(Paragraph(title, styles['Title']))
+    if subt:
+        story.append(Paragraph(' | '.join(subt), styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    # Tabla Hacer
+    data_h = [['Fecha', 'Líder', 'Negociador', 'Hacer (0-100)']]
+    for e in evals.order_by('-date')[:500]:  # limitar filas para no crecer demasiado
+        data_h.append([
+            e.date.strftime('%Y-%m-%d %H:%M'),
+            f'{e.evaluator.first_name} {e.evaluator.last_name}',
+            e.negotiator.name,
+            _round(e.overall_score)
+        ])
+    t_h = Table(data_h, hAlign='LEFT')
+    t_h.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('GRID', (0,0), (-1,-1), 0.25, colors.grey),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    ]))
+    story.append(Paragraph('Evaluaciones Hacer', styles['Heading2']))
+    story.append(t_h)
+    story.append(Spacer(1, 12))
+
+    # Tabla Ser
+    data_s = [['Fecha', 'Líder', 'Negociador', 'Promedio SER (1-5)']]
+    for s in ser_evals.order_by('-date')[:500]:
+        data_s.append([
+            s.date.strftime('%Y-%m-%d %H:%M'),
+            f'{s.evaluator.first_name} {s.evaluator.last_name}',
+            s.negotiator.name,
+            s.promedio
+        ])
+    t_s = Table(data_s, hAlign='LEFT')
+    t_s.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('GRID', (0,0), (-1,-1), 0.25, colors.grey),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+    ]))
+    story.append(Paragraph('Evaluaciones Ser', styles['Heading2']))
+    story.append(t_s)
+
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="historico_evaluaciones.pdf"'
+    return response
