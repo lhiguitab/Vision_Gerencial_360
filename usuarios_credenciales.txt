@@ -5,6 +5,12 @@ Correo; Rol; Cédula; Contraseña
 admin@admin.com; administrativo; 900000; admin123
 admin@admin; administrativo; 900001; admin123
 administrativo@vg360.local; administrativo; 100001; 123456
+analista1@vg360.local; administrativo; 100002; 123456
+reportes@vg360.local; administrativo; 100003; 123456
+soporte@vg360.local; administrativo; 100004; 123456
 lider1@vg360.local; lider; 200001; 123456
 lider2@vg360.local; lider; 200002; 123456
 lider3@vg360.local; lider; 200003; 123456
+lider4@vg360.local; lider; 200004; 123456
+lider5@vg360.local; lider; 200005; 123456
+lider6@vg360.local; lider; 200006; 123456

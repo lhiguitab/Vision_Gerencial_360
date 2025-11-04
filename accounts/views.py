@@ -355,19 +355,40 @@ def exportar_resultados_excel(request):
     if request.user.role != 'administrativo' and not request.user.is_superuser:
         return redirect('profile')
 
-    try:
-        year = int(request.GET.get('anio') or timezone.now().year)
-    except ValueError:
-        year = timezone.now().year
-    semestre = request.GET.get('semestre') or '1'
-    if semestre not in ['1', '2']:
-        semestre = '1'
-    if semestre == '1':
-        start_date = datetime(year, 1, 1).date()
-        end_date = datetime(year, 6, 30).date()
+    # Soporta exportación por fechas (desde/hasta) o por año/semestre (backward compatible)
+    desde_str = request.GET.get('desde')
+    hasta_str = request.GET.get('hasta')
+    start_date = None
+    end_date = None
+    if desde_str or hasta_str:
+        try:
+            if desde_str:
+                start_date = datetime.strptime(desde_str, '%Y-%m-%d').date()
+            if hasta_str:
+                end_date = datetime.strptime(hasta_str, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = None
+            end_date = None
+        if start_date is None:
+            start_date = timezone.now().date() - timedelta(days=180)
+        if end_date is None:
+            end_date = timezone.now().date()
+        if end_date < start_date:
+            start_date, end_date = end_date, start_date
     else:
-        start_date = datetime(year, 7, 1).date()
-        end_date = datetime(year, 12, 31).date()
+        try:
+            year = int(request.GET.get('anio') or timezone.now().year)
+        except ValueError:
+            year = timezone.now().year
+        semestre = request.GET.get('semestre') or '1'
+        if semestre not in ['1', '2']:
+            semestre = '1'
+        if semestre == '1':
+            start_date = datetime(year, 1, 1).date()
+            end_date = datetime(year, 6, 30).date()
+        else:
+            start_date = datetime(year, 7, 1).date()
+            end_date = datetime(year, 12, 31).date()
 
     # Datos consolidados
     qs = (
@@ -443,7 +464,11 @@ def exportar_resultados_excel(request):
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-    filename = f'resultados_semestre_{semestre}_{year}.xlsx'
+    # Nombre de archivo sensible al filtro utilizado
+    if desde_str or hasta_str:
+        filename = f'resultados_{start_date}_{end_date}.xlsx'
+    else:
+        filename = f'resultados_semestre_{semestre}_{year}.xlsx'
     response = HttpResponse(
         buffer.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -555,6 +580,61 @@ def negotiator_detail_view(request, cedula):
         'last_evaluation': last_evaluation
     }
     return render(request, 'accounts/negotiator_detail.html', context)
+
+
+@login_required
+def generar_sugerencia_view(request, cedula):
+    if request.user.role != 'lider':
+        return redirect('profile')
+
+    negotiator = get_object_or_404(Negotiator, cedula=cedula, leader=request.user)
+
+    latest_indicator = negotiator.indicators.order_by('-date').first()
+    last_eval = negotiator.evaluations.order_by('-date').first()
+    last_ser = negotiator.ser_evaluations.order_by('-date').first()
+
+    if not latest_indicator and not last_eval and not last_ser:
+        messages.warning(request, 'No hay datos suficientes para generar una sugerencia.')
+        return redirect('negotiator_detail', cedula=cedula)
+
+    suggestions = []
+
+    if latest_indicator:
+        try:
+            if latest_indicator.porcentaje_cumplimiento_conversion is not None and latest_indicator.porcentaje_cumplimiento_conversion < 60:
+                suggestions.append('Reforzar el seguimiento de leads y la calidad del discurso para mejorar el cumplimiento de conversión (<60%).')
+        except Exception:
+            pass
+
+        try:
+            if latest_indicator.porcentajes_cumplimiento_recaudo is not None and latest_indicator.porcentajes_cumplimiento_recaudo < 70:
+                suggestions.append('Aumentar la cadencia de recordatorios y acuerdos de pago para mejorar el recaudo (<70%).')
+        except Exception:
+            pass
+
+        try:
+            if latest_indicator.porcentaje_caidas_acuerdos is not None and latest_indicator.porcentaje_caidas_acuerdos > 20:
+                suggestions.append('Revisar objeciones frecuentes y fortalecer cierres para reducir caídas de acuerdos (>20%).')
+        except Exception:
+            pass
+
+        try:
+            if latest_indicator.conversion_de_ventas is not None and latest_indicator.conversion_de_ventas < 30:
+                suggestions.append('Trabajar el pitch inicial y calificación de oportunidades: la conversión de ventas está por debajo de 30%.')
+        except Exception:
+            pass
+
+    if last_eval and last_eval.overall_score is not None and last_eval.overall_score < 60:
+        suggestions.append('Foco en KPIs del Hacer con menor desempeño del último mes para elevar el puntaje general (<60).')
+
+    if last_ser and last_ser.promedio is not None and last_ser.promedio < 3.5:
+        suggestions.append('Refuerzo en habilidades blandas (trabajo en equipo, comunicación y compromiso) para mejorar el SER (<3.5/5).')
+
+    if not suggestions:
+        suggestions.append('Buen desempeño general. Mantener prácticas actuales y compartir mejores prácticas con el equipo.')
+
+    messages.info(request, 'Sugerencia: ' + ' | '.join(suggestions))
+    return redirect('negotiator_detail', cedula=cedula)
 
 
 # ============================

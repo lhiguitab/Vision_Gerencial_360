@@ -160,11 +160,9 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_LOGIN_METHODS = ['email']
-ACCOUNT_SIGNUP_FIELDS = ['cedula', 'email', 'password1']
+# Allauth ajustes modernos: usar LOGIN_METHODS y SIGNUP_FIELDS (sin 'username')
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = {'email', 'password1', 'password2', 'cedula', 'first_name', 'last_name'}
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_ADAPTER = 'accounts.adapter.CustomAccountAdapter'

@@ -54,7 +54,7 @@
         <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Actualizar</button>
       </div>
       <div class="col-auto align-self-end">
-        <a class="btn btn-success" href="{% url 'exportar_resultados_excel' %}?anio={{ anio }}&semestre={{ semestre }}">
+        <a class="btn btn-success" href="{% url 'exportar_resultados_excel' %}?anio={{ anio }}&semestre={{ semestre }}&desde={{ desde }}&hasta={{ hasta }}">
           <i class="bi bi-file-earmark-excel"></i> Exportar Excel
         </a>
       </div>

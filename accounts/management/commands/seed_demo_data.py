@@ -95,7 +95,7 @@ class Command(BaseCommand):
             is_superuser=True,
         )
 
-        # 2) Usuario administrativo
+        # 2) Usuarios administrativos
         administrativo = create_user(
             email='administrativo@vg360.local',
             password='123456',
@@ -104,10 +104,34 @@ class Command(BaseCommand):
             first_name='Ana',
             last_name='Admin',
         )
+        analista1 = create_user(
+            email='analista1@vg360.local',
+            password='123456',
+            cedula='100002',
+            role='administrativo',
+            first_name='Alex',
+            last_name='Analista',
+        )
+        reportes = create_user(
+            email='reportes@vg360.local',
+            password='123456',
+            cedula='100003',
+            role='administrativo',
+            first_name='Rebe',
+            last_name='Reportes',
+        )
+        soporte = create_user(
+            email='soporte@vg360.local',
+            password='123456',
+            cedula='100004',
+            role='administrativo',
+            first_name='Sam',
+            last_name='Soporte',
+        )
 
-        # 3) Líderes
+        # 3) Líderes (6 en total)
         lideres = []
-        for i in range(1, 4):
+        for i in range(1, 7):
             lider = create_user(
                 email=f'lider{i}@vg360.local',
                 password='123456',

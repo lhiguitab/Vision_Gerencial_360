@@ -48,12 +48,31 @@
         </div>
         
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'account_login' %}" role="button">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-            </a>
-            <a class="btn btn-outline-dark btn-lg px-5 rounded-pill shadow-sm" href="{% url 'account_signup' %}" role="button">
-                <i class="bi bi-person-plus me-2"></i>Registrarse
-            </a>
+            {% if user.is_authenticated %}
+                {% if user.role == 'administrativo' or user.is_superuser %}
+                    <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'administrativo_dashboard' %}" role="button">
+                        <i class="bi bi-bar-chart-line me-2"></i>Comparación de Líderes
+                    </a>
+                    <a class="btn btn-outline-dark btn-lg px-5 rounded-pill shadow-sm" href="{% url 'historico_evaluaciones' %}" role="button">
+                        <i class="bi bi-clock-history me-2"></i>Histórico y Estadísticas
+                    </a>
+                {% elif user.role == 'lider' %}
+                    <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'lider_dashboard' %}" role="button">
+                        <i class="bi bi-speedometer me-2"></i>Dashboard Líder
+                    </a>
+                {% else %}
+                    <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'profile' %}" role="button">
+                        <i class="bi bi-person-circle me-2"></i>Ir a mi Perfil
+                    </a>
+                {% endif %}
+            {% else %}
+                <a class="btn btn-light btn-lg px-5 rounded-pill shadow-sm" href="{% url 'account_login' %}" role="button">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                </a>
+                <a class="btn btn-outline-dark btn-lg px-5 rounded-pill shadow-sm" href="{% url 'account_signup' %}" role="button">
+                    <i class="bi bi-person-plus me-2"></i>Registrarse
+                </a>
+            {% endif %}
         </div>
     </div>
 </div>
