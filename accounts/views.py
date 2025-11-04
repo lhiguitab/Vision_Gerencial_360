@@ -37,6 +37,7 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime, timedelta
 import json
+from django.conf import settings
 from .models import Negotiator, Evaluation, KPI, EvaluationKPI, NegotiatorIndicator
 from .forms import EvaluationForm
 from django.db.models import Avg, Count
@@ -353,6 +354,13 @@ def administrativo_dashboard_view(request):
     chart_avg_cump_conv = [round(l.get('avg_cump_conv') or 0, 2) for l in leaders_data]
     chart_avg_caidas = [round(l.get('avg_caidas') or 0, 2) for l in leaders_data]
 
+    # Calcular desempeño global (promedio de líderes con valor definido)
+    non_null_desempenos = [l['desempeno'] for l in leaders_data if l.get('desempeno') is not None]
+    overall_desempeno = round(sum(non_null_desempenos) / len(non_null_desempenos), 2) if non_null_desempenos else None
+
+    # Umbral configurable desde settings
+    semester_target = getattr(settings, 'SEMESTER_TARGET', 70)
+
     context = {
         'leaders_data': leaders_data,
         'anio': year,
@@ -376,6 +384,8 @@ def administrativo_dashboard_view(request):
         'chart_avg_cump_recaudo': json.dumps(chart_avg_cump_recaudo),
         'chart_avg_cump_conv': json.dumps(chart_avg_cump_conv),
         'chart_avg_caidas': json.dumps(chart_avg_caidas),
+        'overall_desempeno': overall_desempeno,
+        'semester_target': semester_target,
     }
     return render(request, 'accounts/administrativo_dashboard.html', context)
 
