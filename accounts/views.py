@@ -36,6 +36,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime, timedelta
+import json
 from .models import Negotiator, Evaluation, KPI, EvaluationKPI, NegotiatorIndicator
 from .forms import EvaluationForm
 from django.db.models import Avg, Count
@@ -337,6 +338,21 @@ def administrativo_dashboard_view(request):
     reverse = True if direccion == 'desc' else False
     leaders_data.sort(key=lambda x: (x[ordenar_por] is None, x[ordenar_por]), reverse=reverse)
 
+    # Preparar datos para los gráficos (JSON serializable)
+    labels = [l['nombre'] for l in leaders_data]
+    counts = [int(l.get('equipos') or 0) for l in leaders_data]
+    total_counts = sum(counts)
+    shares = [round((c / total_counts) * 100, 2) if total_counts > 0 else 0 for c in counts]
+    avg_desempeno = [round(l['desempeno'], 2) if l.get('desempeno') is not None else 0 for l in leaders_data]
+
+    # KPI arrays (aligned with labels)
+    chart_avg_recaudo = [round(l.get('avg_recaudo') or 0, 2) for l in leaders_data]
+    chart_avg_tiempo = [round(l.get('avg_tiempo') or 0, 2) for l in leaders_data]
+    chart_avg_conversion = [round(l.get('avg_conversion') or 0, 2) for l in leaders_data]
+    chart_avg_cump_recaudo = [round(l.get('avg_cump_recaudo') or 0, 2) for l in leaders_data]
+    chart_avg_cump_conv = [round(l.get('avg_cump_conv') or 0, 2) for l in leaders_data]
+    chart_avg_caidas = [round(l.get('avg_caidas') or 0, 2) for l in leaders_data]
+
     context = {
         'leaders_data': leaders_data,
         'anio': year,
@@ -347,6 +363,19 @@ def administrativo_dashboard_view(request):
         'end_date': end_date,
         'desde': start_date.strftime('%Y-%m-%d') if start_date else None,
         'hasta': end_date.strftime('%Y-%m-%d') if end_date else None,
+
+        # Gráficos (pasados como JSON seguro)
+        'chart_labels': json.dumps(labels),
+        'chart_counts': json.dumps(counts),
+        'chart_shares': json.dumps(shares),
+        'chart_avg_desempeno': json.dumps(avg_desempeno),
+
+        'chart_avg_recaudo': json.dumps(chart_avg_recaudo),
+        'chart_avg_tiempo': json.dumps(chart_avg_tiempo),
+        'chart_avg_conversion': json.dumps(chart_avg_conversion),
+        'chart_avg_cump_recaudo': json.dumps(chart_avg_cump_recaudo),
+        'chart_avg_cump_conv': json.dumps(chart_avg_cump_conv),
+        'chart_avg_caidas': json.dumps(chart_avg_caidas),
     }
     return render(request, 'accounts/administrativo_dashboard.html', context)
 
