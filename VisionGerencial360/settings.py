@@ -128,6 +128,11 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Threshold target for semester consolidated performance (percentage).
+# Used by administrative dashboard to trigger global alerts when overall
+# semester performance falls below this value. Can be overridden in prod.
+SEMESTER_TARGET = 70
+
 # Email Configuration (for allauth and password reset)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.your-email-provider.com'  # e.g., smtp.gmail.com
