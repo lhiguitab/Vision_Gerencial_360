@@ -106,7 +106,12 @@
         <tbody>
           {% for e in evals %}
           <tr>
-            <td>{{ e.date|date:'Y-m-d H:i' }}</td>
+            <td>
+              <a href="{% url 'admin_evaluation_detail' pk=e.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye"></i>
+              </a>
+              {{ e.date|date:'Y-m-d H:i' }}
+            </td>
             <td>{{ e.evaluator.first_name }} {{ e.evaluator.last_name }} ({{ e.evaluator.email }})</td>
             <td>{{ e.negotiator.name }} ({{ e.negotiator.cedula }})</td>
             <td>{{ e.overall_score|floatformat:2 }}</td>
@@ -140,7 +145,12 @@
         <tbody>
           {% for s in ser_evals %}
           <tr>
-            <td>{{ s.date|date:'Y-m-d H:i' }}</td>
+            <td>
+              <a href="{% url 'admin_ser_evaluation_detail' pk=s.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye"></i>
+              </a>
+              {{ s.date|date:'Y-m-d H:i' }}
+            </td>
             <td>{{ s.evaluator.first_name }} {{ s.evaluator.last_name }} ({{ s.evaluator.email }})</td>
             <td>{{ s.negotiator.name }} ({{ s.negotiator.cedula }})</td>
             <td>{{ s.actitud }}</td>

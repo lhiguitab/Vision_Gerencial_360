@@ -42,6 +42,7 @@ from .models import Negotiator, Evaluation, KPI, EvaluationKPI, NegotiatorIndica
 from .forms import EvaluationForm
 from django.db.models import Avg, Count
 from django.db.models.functions import Coalesce
+from django.contrib.auth import get_user_model
 
 def home_view(request):
     return render(request, 'accounts/home.html')
@@ -435,6 +436,42 @@ def administrativo_dashboard_view(request):
         'semester_target': semester_target,
     }
     return render(request, 'accounts/administrativo_dashboard.html', context)
+
+
+@login_required
+def admin_evaluation_detail(request, pk):
+    """Vista de solo lectura para una evaluación (Hacer) accesible solo por administradores."""
+    # Permitir solo administradores o superusuarios
+    if request.user.role != 'administrativo' and not request.user.is_superuser:
+        return redirect('profile')
+
+    evaluation = get_object_or_404(Evaluation, pk=pk)
+
+    if request.method == 'POST':
+        # No permitimos modificaciones: informar y mostrar vista de solo lectura
+        messages.warning(request, 'Esta evaluación es de solo lectura para administradores y no puede modificarse aquí.')
+
+    context = {
+        'evaluation': evaluation,
+    }
+    return render(request, 'accounts/admin_evaluation_detail.html', context)
+
+
+@login_required
+def admin_ser_evaluation_detail(request, pk):
+    """Vista de solo lectura para una evaluación del Ser accesible solo por administradores."""
+    if request.user.role != 'administrativo' and not request.user.is_superuser:
+        return redirect('profile')
+
+    ser_eval = get_object_or_404(SerEvaluation, pk=pk)
+
+    if request.method == 'POST':
+        messages.warning(request, 'Esta evaluación (Ser) es de solo lectura para administradores y no puede modificarse aquí.')
+
+    context = {
+        'ser_eval': ser_eval,
+    }
+    return render(request, 'accounts/admin_ser_evaluation_detail.html', context)
 
 @login_required
 def exportar_resultados_excel(request):

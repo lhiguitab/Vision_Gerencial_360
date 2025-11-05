@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h1>Evaluación del Ser (solo lectura)</h1>
+    <a href="{% url 'historico_evaluaciones' %}" class="btn btn-secondary">Volver al Histórico</a>
+  </div>
+  <hr/>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">Evaluación Ser — {{ ser_eval.date|date:'d/m/Y H:i' }}</div>
+    <div class="card-body">
+      <p><strong>Negociador:</strong> {{ ser_eval.negotiator.name }} ({{ ser_eval.negotiator.cedula }})</p>
+      <p><strong>Evaluador:</strong> {{ ser_eval.evaluator.first_name }} {{ ser_eval.evaluator.last_name }} ({{ ser_eval.evaluator.email }})</p>
+      <ul class="list-group mb-3">
+        <li class="list-group-item">Actitud: <strong>{{ ser_eval.actitud }}</strong></li>
+        <li class="list-group-item">Trabajo en equipo: <strong>{{ ser_eval.trabajo_en_equipo }}</strong></li>
+        <li class="list-group-item">Sentido de pertenencia: <strong>{{ ser_eval.sentido_pertenencia }}</strong></li>
+        <li class="list-group-item">Relacionamiento: <strong>{{ ser_eval.relacionamiento }}</strong></li>
+        <li class="list-group-item">Compromiso: <strong>{{ ser_eval.compromiso }}</strong></li>
+      </ul>
+      <p><strong>Promedio:</strong> <span class="badge bg-info">{{ ser_eval.promedio|floatformat:2 }}</span></p>
+
+      <hr/>
+      <p class="text-muted"><em>Vista de solo lectura. Las modificaciones no están permitidas desde esta interfaz.</em></p>
+    </div>
+  </div>
+</div>
+{% endblock %}
