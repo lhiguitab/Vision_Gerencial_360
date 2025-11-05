@@ -20,6 +20,45 @@
       <p><strong>Negociador:</strong> {{ evaluation.negotiator.name }} ({{ evaluation.negotiator.cedula }})</p>
       <p><strong>Evaluador:</strong> {{ evaluation.evaluator.first_name }} {{ evaluation.evaluator.last_name }} ({{ evaluation.evaluator.email }})</p>
       <p><strong>Calificación general:</strong> <span class="badge bg-success">{{ evaluation.overall_score|floatformat:2 }}</span></p>
+      
+      {% if evaluation_kpis %}
+        <hr/>
+        <h5>KPIs asociados a la evaluación</h5>
+        <table class="table table-sm">
+          <thead>
+            <tr><th>KPI</th><th>Valor</th></tr>
+          </thead>
+          <tbody>
+            {% for ek in evaluation_kpis %}
+              <tr>
+                <td>{{ ek.kpi_name }}</td>
+                <td>{{ ek.display }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if latest_indicator %}
+        <hr/>
+        <h5>Indicador más cercano a la fecha de evaluación ({{ latest_indicator.date }})</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <ul class="list-group">
+              <li class="list-group-item">Conversión de ventas: <strong>{{ latest_indicator.conversion_de_ventas|floatformat:2 }}%</strong></li>
+              <li class="list-group-item">Recaudo mensual: <strong>${{ latest_indicator.recaudacion_mensual|floatformat:0 }}</strong></li>
+              <li class="list-group-item">Tiempo hablando: <strong>{{ latest_indicator.tiempo_hablando|floatformat:2 }} h</strong></li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <ul class="list-group">
+              <li class="list-group-item">Cumpl. Recaudo: <strong>{{ latest_indicator.porcentajes_cumplimiento_recaudo|floatformat:2 }}%</strong></li>
+              <li class="list-group-item">Cumpl. Conversión: <strong>{{ latest_indicator.porcentaje_cumplimiento_conversion|floatformat:2 }}%</strong></li>
+              <li class="list-group-item">Caídas Acuerdos: <strong>{{ latest_indicator.porcentaje_caidas_acuerdos|floatformat:2 }}%</strong></li>
+            </ul>
+          </div>
+        </div>
+      {% endif %}
       {% if evaluation.feedback %}
         <div class="mt-3">
           <h6>Feedback</h6>

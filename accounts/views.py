@@ -451,8 +451,33 @@ def admin_evaluation_detail(request, pk):
         # No permitimos modificaciones: informar y mostrar vista de solo lectura
         messages.warning(request, 'Esta evaluación es de solo lectura para administradores y no puede modificarse aquí.')
 
+    # KPIs asociados a la evaluación (EvaluationKPI)
+    evaluation_kpis_qs = evaluation.kpis.select_related('kpi').all()
+    # Pre-compute display values to avoid calling model methods with args in templates
+    evaluation_kpis = []
+    for ek in evaluation_kpis_qs:
+        try:
+            display = ek.kpi.get_display_value(ek.score)
+        except Exception:
+            display = ek.score
+        evaluation_kpis.append({
+            'kpi_name': ek.kpi.name,
+            'score': ek.score,
+            'display': display,
+        })
+
+    # Buscar el indicador más cercano anterior o igual a la fecha de la evaluación
+    latest_indicator = None
+    try:
+        eval_date = evaluation.date.date()
+        latest_indicator = evaluation.negotiator.indicators.filter(date__lte=eval_date).order_by('-date').first()
+    except Exception:
+        latest_indicator = None
+
     context = {
         'evaluation': evaluation,
+        'evaluation_kpis': evaluation_kpis,
+        'latest_indicator': latest_indicator,
     }
     return render(request, 'accounts/admin_evaluation_detail.html', context)
 
