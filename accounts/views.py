@@ -308,6 +308,12 @@ def administrativo_dashboard_view(request):
         )
     )
 
+    # Umbral configurable desde settings (se usa también para alertas por líder)
+    semester_target = getattr(settings, 'SEMESTER_TARGET', 70)
+
+    # Threshold to show a warning color (e.g., 80% of the target)
+    warning_threshold = round(semester_target * 0.8, 2)
+
     leaders_data = []
     for row in qs:
         desempeno_componentes = []
@@ -383,9 +389,40 @@ def administrativo_dashboard_view(request):
                 'avg_cump_conv': agg.get('avg_cump_conv'),
                 'avg_caidas': agg.get('avg_caidas'),
                 'desempeno': n_desempeno,
+                # Indica si este negociador tuvo al menos una evaluación en el rango seleccionado
+                'evaluated_in_range': n.evaluations.filter(date__date__gte=start_date, date__date__lte=end_date).exists(),
             })
 
         leader['negociadores'] = negociadores_list
+
+        # --- Métricas de diligenciamiento por líder (HU20) ---
+        # Total negociadores del líder (fuente primaria)
+        total_negotiators = Negotiator.objects.filter(leader__cedula=leader['cedula']).count()
+
+        # Número de negociadores que tuvieron al menos una evaluación en el rango
+        evaluated_negotiators = Negotiator.objects.filter(
+            leader__cedula=leader['cedula'],
+            evaluations__date__date__gte=start_date,
+            evaluations__date__date__lte=end_date
+        ).distinct().count()
+
+        # Número total de evaluaciones registradas para el líder en el rango
+        evaluations_done = Evaluation.objects.filter(
+            negotiator__leader__cedula=leader['cedula'],
+            date__date__gte=start_date,
+            date__date__lte=end_date
+        ).count()
+
+        pending = total_negotiators - evaluated_negotiators
+        pct = round((evaluated_negotiators / total_negotiators) * 100, 2) if total_negotiators > 0 else 0
+
+        leader['total_negotiators'] = total_negotiators
+        leader['evaluated_negotiators'] = evaluated_negotiators
+        leader['evaluations_done'] = evaluations_done
+        leader['pending_negotiators'] = pending
+        leader['pct_cumplimiento'] = pct
+        # Flag para alerta visual (por debajo del objetivo semestral)
+        leader['alert'] = pct < semester_target if total_negotiators > 0 else False
 
     # Preparar datos para los gráficos (JSON serializable)
     labels = [l['nombre'] for l in leaders_data]
@@ -434,6 +471,7 @@ def administrativo_dashboard_view(request):
         'chart_avg_caidas': json.dumps(chart_avg_caidas),
         'overall_desempeno': overall_desempeno,
         'semester_target': semester_target,
+        'warning_threshold': warning_threshold,
     }
     return render(request, 'accounts/administrativo_dashboard.html', context)
 

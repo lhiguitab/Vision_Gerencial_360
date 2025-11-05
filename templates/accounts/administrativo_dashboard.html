@@ -135,6 +135,9 @@
           <th>Líder / Negociador</th>
           <th>Correo / Cédula</th>
           <th>Negociadores</th>
+          <th>Eval. Realizadas</th>
+          <th>Pendientes</th>
+          <th style="width:220px">Cumplimiento (%)</th>
           <th>Conv. Ventas (%)</th>
           <th>Cumpl. Recaudo (%)</th>
           <th>Cumpl. Conversión (%)</th>
@@ -157,6 +160,17 @@
           <td><strong>{{ l.nombre }}</strong></td>
           <td>{{ l.email }}</td>
           <td><span class="badge bg-info text-dark">{{ l.equipos }}</span></td>
+          <td>{{ l.evaluations_done }}</td>
+          <td>
+            <span class="badge {% if l.pending_negotiators > 0 %}bg-danger{% else %}bg-success{% endif %}">
+              {{ l.pending_negotiators }}
+            </span>
+          </td>
+          <td>
+            <div class="progress" style="height:14px">
+                                <div class="progress-bar {% if l.pct_cumplimiento >= semester_target %}bg-success{% elif l.pct_cumplimiento >= warning_threshold %}bg-warning text-dark{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ l.pct_cumplimiento }}%;" aria-valuenow="{{ l.pct_cumplimiento }}" aria-valuemin="0" aria-valuemax="100">{{ l.pct_cumplimiento }}%</div>
+            </div>
+          </td>
           <td>{{ l.avg_conversion|floatformat:2 }}</td>
           <td>{{ l.avg_cump_recaudo|floatformat:2 }}</td>
           <td>{{ l.avg_cump_conv|floatformat:2 }}</td>
@@ -180,6 +194,14 @@
             <i class="bi bi-person-fill text-secondary"></i> {{ n.nombre }}
           </td>
           <td class="text-muted">{{ n.cedula }}</td>
+          <td>
+            {% if n.evaluated_in_range %}
+              <span class="badge bg-success">Al día</span>
+            {% else %}
+              <span class="badge bg-danger">Pendiente</span>
+            {% endif %}
+          </td>
+          <td>-</td>
           <td>-</td>
           <td>{{ n.avg_conversion|floatformat:2|default:"-" }}</td>
           <td>{{ n.avg_cump_recaudo|floatformat:2|default:"-" }}</td>
@@ -206,6 +228,9 @@
   </div>
   <div class="card-footer text-muted">
     Haz clic en el botón <i class="bi bi-chevron-down"></i> para ver los negociadores de cada líder.
+  </div>
+  <div class="px-3 pb-3 small text-muted">
+    <strong>Nota:</strong> La columna "Cumplimiento" muestra el porcentaje de negociadores evaluados en el rango seleccionado. Si está por debajo del objetivo ({{ semester_target }}%), aparece en rojo.
   </div>
 </div>
 <!-- Gráficos resumen para administradores -->
