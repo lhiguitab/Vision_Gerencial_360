@@ -331,6 +331,8 @@ def administrativo_dashboard_view(request):
             'avg_cump_conv': row['avg_cump_conv'],
             'avg_caidas': row['avg_caidas'],
             'desempeno': desempeno,
+            # Placeholder for negociadores; will be filled below
+            'negociadores': []
         })
 
     # Ordenamiento
@@ -338,6 +340,51 @@ def administrativo_dashboard_view(request):
     direccion = request.GET.get('direccion') or 'desc'
     reverse = True if direccion == 'desc' else False
     leaders_data.sort(key=lambda x: (x[ordenar_por] is None, x[ordenar_por]), reverse=reverse)
+
+    # Enriquecer cada líder con su lista de negociadores y métricas agregadas en el rango
+    for leader in leaders_data:
+        try:
+            negotiators_qs = Negotiator.objects.filter(leader__cedula=leader['cedula'])
+        except Exception:
+            negotiators_qs = Negotiator.objects.filter(leader__cedula=leader.get('cedula'))
+
+        negociadores_list = []
+        for n in negotiators_qs:
+            # Agregar promedios desde NegotiatorIndicator en el mismo rango de fechas
+            ind_qs = n.indicators.filter(date__gte=start_date, date__lte=end_date)
+            agg = ind_qs.aggregate(
+                avg_conversion=Coalesce(Avg('conversion_de_ventas'), 0.0),
+                avg_recaudo=Coalesce(Avg('recaudacion_mensual'), 0.0),
+                avg_tiempo=Coalesce(Avg('tiempo_hablando'), 0.0),
+                avg_cump_recaudo=Coalesce(Avg('porcentajes_cumplimiento_recaudo'), 0.0),
+                avg_cump_conv=Coalesce(Avg('porcentaje_cumplimiento_conversion'), 0.0),
+                avg_caidas=Coalesce(Avg('porcentaje_caidas_acuerdos'), 0.0),
+            )
+            # Calcular desempeño similar al líder
+            componentes = []
+            if agg['avg_conversion'] is not None:
+                componentes.append(agg['avg_conversion'])
+            if agg['avg_cump_recaudo'] is not None:
+                componentes.append(agg['avg_cump_recaudo'])
+            if agg['avg_cump_conv'] is not None:
+                componentes.append(agg['avg_cump_conv'])
+            if agg['avg_caidas'] is not None:
+                componentes.append(max(0.0, 100.0 - agg['avg_caidas']))
+            n_desempeno = round(sum(componentes) / len(componentes), 2) if componentes else None
+
+            negociadores_list.append({
+                'cedula': n.cedula,
+                'nombre': n.name,
+                'avg_conversion': agg.get('avg_conversion'),
+                'avg_recaudo': agg.get('avg_recaudo'),
+                'avg_tiempo': agg.get('avg_tiempo'),
+                'avg_cump_recaudo': agg.get('avg_cump_recaudo'),
+                'avg_cump_conv': agg.get('avg_cump_conv'),
+                'avg_caidas': agg.get('avg_caidas'),
+                'desempeno': n_desempeno,
+            })
+
+        leader['negociadores'] = negociadores_list
 
     # Preparar datos para los gráficos (JSON serializable)
     labels = [l['nombre'] for l in leaders_data]
